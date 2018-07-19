@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.maciek.droganowegoczlowieka.Activities.MainActivity">
+
+    <LinearLayout
+        android:id="@+id/linar_layout_buttons"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/tourist_button"
+            android:id="@+id/button_tourist"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/oaza_youth_button"
+            android:id="@+id/button_oaza_youth"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/home_church_button"
+            android:id="@+id/button_home_church"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/advanced_button"
+            android:id="@+id/button_advanced"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Wyczyść liste tytulow"
+            android:id="@+id/button_clear_list" />
+
+    </LinearLayout>
+
+
+</android.support.constraint.ConstraintLayout>

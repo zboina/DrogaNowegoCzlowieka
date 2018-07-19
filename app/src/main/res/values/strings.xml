@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Droga Nowego Czlowieka</string>
+    <string name="tourist_button">Turysta</string>
+    <string name="oaza_youth_button">DownloadMp3</string>
+    <string name="advanced_button">DBDebugger</string>
+    <string name="home_church_button">downloadTitles</string>
+    <!--TODO dodać wartości dla wszytkich referencji-->
+</resources>
