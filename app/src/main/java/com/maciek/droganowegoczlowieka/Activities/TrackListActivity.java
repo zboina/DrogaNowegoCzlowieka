@@ -67,67 +67,12 @@ public class TrackListActivity extends AppCompatActivity implements  TrackListAd
 
 
 
-//        if (cursor.moveToFirst()){
-//            do{
-//                String data = cursor.getString(cursor.getColumnIndex("AUDIO"));
-//                String mUrl="http://android.x25.pl/NowaDroga/audio/"+ data;
-//                Intent intent = new Intent(this, DownloadService.class);
-//                // add infos for the service which file to download and where to store
-//                intent.putExtra(DownloadService.FILENAME, data);
-//                intent.putExtra(DownloadService.URL,
-//                        mUrl);
-//                startService(intent);
-//            }while(cursor.moveToNext());
-//        }
         cursor.close();
 
 //        TODO: sprawdzić czy ktoś wyraził zgodę na używanie internetu// korzystanie z internal storage
 
     }
 
-//    @Override
-//    public void onResponse(byte[] response) {
-//        HashMap<String, Object> map = new HashMap<String, Object>();
-//        try {
-//            if (response!=null) {
-//
-//                try{
-//                    long lenghtOfFile = response.length;
-//                    InputStream input = new ByteArrayInputStream(response);
-//                    String fileName = request.getUrl().substring(38);
-//                    File file = new File(getApplicationContext().getFilesDir(), fileName );
-//                    InsertPositionToList.insertUri(db, file.getAbsolutePath(), fileName );
-//                    map.put("resume_path", file.toString());
-//                    BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(file));
-//                    byte data[] = new byte[1024];
-//
-//                    long total = 0;
-//
-//                    while ((count = input.read(data)) != -1) {
-//                        total += count;
-//                        output.write(data, 0, count);
-//                    }
-//
-//                    output.flush();
-//
-//                    output.close();
-//                    input.close();
-//                }catch(IOException e){
-//                    e.printStackTrace();
-//
-//                }
-//            }
-//        } catch (Exception e) {
-//            // TODO Auto-generated catch block
-//            Log.d("KEY_ERROR", "UNABLE TO DOWNLOAD FILE");
-//            e.printStackTrace();
-//        }
-//    }
-//
-//    @Override
-//    public void onErrorResponse(VolleyError error) {
-//        Log.d("KEY_ERROR", "UNABLE TO DOWNLOAD FILE. ERROR:: "+error.getMessage());
-//    }
 
     @Override
     public void onListItemClick(int clickedItemIndex, String title) throws IOException {
@@ -148,42 +93,6 @@ public class TrackListActivity extends AppCompatActivity implements  TrackListAd
 
 
 
-//    private BroadcastReceiver receiver = new BroadcastReceiver() {
-//
-//        @Override
-//        public void onReceive(Context context, Intent intent) {
-//            Bundle bundle = intent.getExtras();
-//            if (bundle != null) {
-//                String string = bundle.getString(DownloadService.FILEPATH);
-//
-//                int resultCode = bundle.getInt(DownloadService.RESULT);
-//                if (resultCode == RESULT_OK) {
-//                    Toast.makeText(getApplicationContext(),
-//                            "Download complete. Download URI: " + string,
-//                            Toast.LENGTH_SHORT).show();
-//                    InsertPositionToList.insertUri(db, bundle.getString(DownloadService.FILEPATH), bundle.getString(DownloadService.FILENAME));
-//
-//                } else {
-//                    Toast.makeText(getApplicationContext(), "Download failed",
-//                            Toast.LENGTH_SHORT).show();
-//
-//                }
-//            }
-//        }
-//    };
-//
-//
-//    @Override
-//    protected void onResume() {
-//        super.onResume();
-//        registerReceiver(receiver, new IntentFilter(
-//                DownloadService.NOTIFICATION));
-//    }
-//    @Override
-//    protected void onPause() {
-//        super.onPause();
-//        unregisterReceiver(receiver);
-//    }
 
     public boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
@@ -204,8 +113,7 @@ public class TrackListActivity extends AppCompatActivity implements  TrackListAd
     }
     public void takeInputStream(InputStream stream) throws IOException
     {
-        //fileBeingBuffered = (FileInputStream) stream;
-        //Toast.makeText(this, "sucessful stream conversion.", Toast.LENGTH_SHORT).show();
+
         try
         {
             convertedFile = File.createTempFile("convertedFile", ".dat", getDir("filez", 0));

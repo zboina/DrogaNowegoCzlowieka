@@ -9,11 +9,14 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Handler;
+import android.os.SystemClock;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.android.volley.Response;
@@ -31,7 +34,11 @@ import com.maciek.droganowegoczlowieka.Utilities.VolleyGetRequest;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, Response.Listener<byte[]>, Response.ErrorListener{
 
     private Button touristButton, homeChurchButton, advancedButton, oazaYouthButton, clearList;
+    private ProgressBar progressBar;
     private SQLiteDatabase db;
+    private int progressStatus = 0;
+    private Handler mHandler = new Handler();
+    private  Cursor cursor;
 
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
@@ -50,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         homeChurchButton = findViewById(R.id.button_home_church);
         advancedButton = findViewById(R.id.button_advanced);
         oazaYouthButton = findViewById(R.id.button_oaza_youth);
+        progressBar = findViewById(R.id.progress_bar);
         clearList = findViewById(R.id.button_clear_list);
         clearList.setOnClickListener(this);
         oazaYouthButton.setOnClickListener(this);
@@ -86,13 +94,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 TuristListDbHelper turistListDbHelper = new TuristListDbHelper(this);
                 db = turistListDbHelper.getReadableDatabase();
                 TuristListDbQuery turistListDbQuery = new TuristListDbQuery(db);
-                Cursor cursor = turistListDbQuery.getQueriedTouristList("1");
                 cursor = turistListDbQuery.getAudioCursor("1");
-
-
 
                 if (cursor.moveToFirst()){
                     do{
+                        progressBar.setVisibility(View.VISIBLE);
+                        progressStatus = cursor.getPosition();
                         String data = cursor.getString(cursor.getColumnIndex("AUDIO"));
                         String mUrl="http://android.x25.pl/NowaDroga/audio/"+ data;
                         Intent intent = new Intent(this, DownloadService.class);
@@ -100,9 +107,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         intent.putExtra(DownloadService.FILENAME, data);
                         intent.putExtra(DownloadService.URL,
                                 mUrl);
+                        intent.putExtra(DownloadService.COUNTER, progressStatus);
                         startService(intent);
                     }while(cursor.moveToNext());
                 }
+
                 cursor.close();
                 break;
             case R.id.button_clear_list:
@@ -143,9 +152,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 int resultCode = bundle.getInt(DownloadService.RESULT);
                 if (resultCode == RESULT_OK) {
-                    Toast.makeText(getApplicationContext(),
-                            "Download complete. Download URI: " + string,
-                            Toast.LENGTH_SHORT).show();
+                    progressStatus=bundle.getInt(DownloadService.COUNTER);
+                    if(progressStatus==cursor.getCount()){
+                        Toast.makeText(MainActivity.this, "Download completed", Toast.LENGTH_SHORT).show();
+                    }
+                    showProgressBar(cursor.getCount());
+//                    Toast.makeText(getApplicationContext(),
+//                            "Download complete. Download URI: " + string,
+//                            Toast.LENGTH_SHORT).show();
                     InsertPositionToList.insertUri(db, bundle.getString(DownloadService.FILEPATH), bundle.getString(DownloadService.FILENAME));
 
                 } else {
@@ -182,6 +196,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     REQUEST_EXTERNAL_STORAGE
             );
         }
+    }
+
+    public void showProgressBar(final int cursorSize){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (progressStatus<cursorSize){
+
+                    SystemClock.sleep(10);
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            progressBar.setProgress(2*progressStatus+2);
+                        }
+                    });
+                }
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(progressStatus==cursorSize){
+                            progressBar.setVisibility(View.INVISIBLE);
+                        }
+
+
+                    }
+                });
+            }
+        }).start();
     }
 
 }

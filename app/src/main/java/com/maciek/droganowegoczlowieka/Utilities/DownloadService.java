@@ -32,6 +32,7 @@ public class DownloadService extends IntentService {
     public static final String FILEPATH = "filepath";
     public static final String RESULT = "result";
     public static final String NOTIFICATION = "com.vogella.android.service.receiver";
+    public static final String COUNTER = "counter";
 
     public DownloadService() {
         super("DownloadService");
@@ -45,40 +46,44 @@ public class DownloadService extends IntentService {
         File output = new File(Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_MUSIC),
                 fileName);
+        int counter = intent.getIntExtra(COUNTER, 0);
+        counter++;
         if (output.exists()) {
-            output.delete();
-        }
+            result =-1;
+            publishResults(output.getAbsolutePath(), result, fileName, counter);
+        }else {
+            try {
+                URL u = new URL(urlPath);
+                HttpURLConnection c = (HttpURLConnection) u.openConnection();
+                c.setRequestMethod("GET");
+                c.setDoOutput(true);
+                c.connect();
+                FileOutputStream f = new FileOutputStream(output);
 
-        try{
-            URL u = new URL(urlPath);
-            HttpURLConnection c = (HttpURLConnection) u.openConnection();
-            c.setRequestMethod("GET");
-            c.setDoOutput(true);
-            c.connect();
-            FileOutputStream f = new FileOutputStream(output);
 
+                InputStream in = c.getInputStream();
 
-            InputStream in = c.getInputStream();
+                byte[] buffer = new byte[1024];
+                int len1 = 0;
+                while ((len1 = in.read(buffer)) > 0) {
+                    f.write(buffer, 0, len1);
+                }
+                f.close();
+                result = -1;
+            } catch (Exception e) {
 
-            byte[] buffer = new byte[1024];
-            int len1 = 0;
-            while ( (len1 = in.read(buffer)) > 0 ) {
-                f.write(buffer,0, len1);
             }
-            f.close();
-            result = -1;
-        }catch (Exception e){
 
+            publishResults(output.getAbsolutePath(), result, fileName, counter);
         }
-
-        publishResults(output.getAbsolutePath(), result, fileName);
     }
 
-    private void publishResults(String outputPath, int result, String fileName) {
+    private void publishResults(String outputPath, int result, String fileName, int counter) {
         Intent intent = new Intent(NOTIFICATION);
         intent.putExtra(FILEPATH, outputPath);
         intent.putExtra(FILENAME, fileName);
         intent.putExtra(RESULT, result);
+        intent.putExtra(COUNTER, counter );
         sendBroadcast(intent);
     }
 }
