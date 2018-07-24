@@ -35,16 +35,16 @@ import java.util.HashMap;
 public class TrackListActivity extends AppCompatActivity implements  TrackListAdapter.ListItemClickListener{
 //implements Response.Listener<byte[]>, Response.ErrorListener, TrackListAdapter.ListItemClickListener
 
-    File convertedFile;
-    String TAG = "WIADOMOSC";
-    FileOutputStream out;
-    MediaPlayer mp;
+
     private SQLiteDatabase db;
     int count;
     HashMap<String,String> temp;
     private TrackListAdapter trackListAdapter;
     private RecyclerView mRecyclerView;
     private RecyclerView.LayoutManager mLayoutManager;
+    public static String PATH = "path";
+    public static String TITLE = "title";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -81,9 +81,9 @@ public class TrackListActivity extends AppCompatActivity implements  TrackListAd
                 Environment.DIRECTORY_MUSIC),
                 title);
         FileInputStream fis = new FileInputStream(output);
-        takeInputStream(fis);
-
-
+        Intent intent = new Intent(this, MediaPlayerActivity.class);
+        intent.putExtra(TITLE, title);
+        startActivity(intent);
 
 
 //        TODO po kliknieciu na element odpala media playera i puszcza element z list sciaga URI pliki lokalnego
@@ -111,65 +111,9 @@ public class TrackListActivity extends AppCompatActivity implements  TrackListAd
         }
         return false;
     }
-    public void takeInputStream(InputStream stream) throws IOException
-    {
 
-        try
-        {
-            convertedFile = File.createTempFile("convertedFile", ".dat", getDir("filez", 0));
-            Toast.makeText(this, "Successful file and folder creation.", Toast.LENGTH_SHORT).show();
 
-            out = new FileOutputStream(convertedFile);
-            Toast.makeText(this, "Success out set as output stream.", Toast.LENGTH_SHORT).show();
 
-            //RIGHT AROUND HERE -----------
-
-            byte buffer[] = new byte[16384];
-            int length = 0;
-            while ( (length = stream.read(buffer)) != -1 )
-            {
-                out.write(buffer,0, length);
-            }
-
-            //stream.read(buffer);
-            Toast.makeText(this, "Success buffer is filled.", Toast.LENGTH_SHORT).show();
-            out.close();
-
-            playFile();
-        }catch(Exception e)
-        {
-            Log.e(TAG, e.toString());
-            e.printStackTrace();
-        }//end catch
-    }//end grabBuffer
-
-    public void playFile()
-    {
-        try {
-            mp = new MediaPlayer();
-            FileInputStream fis = new FileInputStream(convertedFile);
-            mp.setDataSource(fis.getFD());
-
-            Toast.makeText(this, "Success, Path has been set", Toast.LENGTH_SHORT).show();
-
-            mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            mp.prepare();
-            Toast.makeText(this, "Media Player prepared", Toast.LENGTH_SHORT).show();
-
-            mp.start();
-            Toast.makeText(this, "Media Player playing", Toast.LENGTH_SHORT).show();
-        } catch (IllegalArgumentException e) {
-            Log.e(TAG, e.toString());
-            e.printStackTrace();
-        } catch (IllegalStateException e) {
-            Log.e(TAG, e.toString());
-            e.printStackTrace();
-        } catch (IOException e) {
-            Log.e(TAG, e.toString());
-            e.printStackTrace();
-        }
-
-    }//end playFile
 
 
 }

@@ -38,12 +38,14 @@ public class TuristListDbQuery {
                 null);
     }
 
-    public Cursor getAudioUri(){
-        String[] ary = new String[] {TouristListContract.TouristListEntry.COLUMN_LOCAL_URI};
+    public Cursor getAudioTitle(String position){
+        String[] ary = new String[] {TouristListContract.TouristListEntry.COLUMN_POSITION, TouristListContract.TouristListEntry.COLUMN_NAME, TouristListContract.TouristListEntry.COLUMN_LOCAL_URI, TouristListContract.TouristListEntry.COLUMN_AUDIO};
+        String selection = TouristListContract.TouristListEntry.COLUMN_POSITION + " = ?";
+        String[] selectionArgs = {position};
         return mDb.query(TouristListContract.TouristListEntry.TABLE_NAME,
                 ary,
-                null,
-                null,
+                selection,
+                selectionArgs,
                 null,
                 null,
                 null);
@@ -60,5 +62,19 @@ public class TuristListDbQuery {
                 null,
                 null,
                 null);
+    }
+
+    public Cursor getPosition(String title){
+        String[] ary = new String[] {TouristListContract.TouristListEntry.COLUMN_POSITION, TouristListContract.TouristListEntry.COLUMN_NAME, TouristListContract.TouristListEntry.COLUMN_LOCAL_URI, TouristListContract.TouristListEntry.COLUMN_AUDIO};
+        String selection = TouristListContract.TouristListEntry.COLUMN_AUDIO + " = ?";
+        String[] selectionArgs = {title};
+        return mDb.query(TouristListContract.TouristListEntry.TABLE_NAME,
+                ary,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                null);
+
     }
 }
