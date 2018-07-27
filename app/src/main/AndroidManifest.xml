@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <permission android:name="android.permission.MEDIA_CONTENT_CONTROL" />
 
     <application
         android:allowBackup="true"
@@ -24,8 +25,11 @@
         <activity android:name=".Utilities.AndroidDatabaseManager" />
 
         <service android:name=".Utilities.DownloadService"></service>
+        <service android:name=".MediaPlayer.MediaPlayerService" />
 
-        <activity android:name=".Activities.MediaPlayerActivity"></activity>
+        <activity android:name=".Activities.MediaPlayerActivity">
+
+        </activity>
     </application>
 
 </manifest>

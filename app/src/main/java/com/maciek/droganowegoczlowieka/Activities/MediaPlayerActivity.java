@@ -1,7 +1,11 @@
 package com.maciek.droganowegoczlowieka.Activities;
 
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.AudioManager;
@@ -9,16 +13,21 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.maciek.droganowegoczlowieka.DB.TouristListContract;
 import com.maciek.droganowegoczlowieka.DB.TuristListDbHelper;
 import com.maciek.droganowegoczlowieka.DB.TuristListDbQuery;
+import com.maciek.droganowegoczlowieka.MediaPlayer.MediaPlayerService;
+import com.maciek.droganowegoczlowieka.MediaPlayer.StorageUtil;
 import com.maciek.droganowegoczlowieka.R;
 
 import java.io.File;
@@ -31,21 +40,23 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class MediaPlayerActivity extends AppCompatActivity {
+public class MediaPlayerActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private Handler mHandler = new Handler();
     private SQLiteDatabase db;
     private TuristListDbQuery turistListDbQuery;
     private TuristListDbHelper turistListDbHelper;
     private SeekBar mSeekBar;
     private Cursor cursor;
-    Timer timer;
     ArrayList<String> listOfTitles;
-    int i = 0;
-    File convertedFile;
-    String TAG = "WIADOMOSC";
-    FileOutputStream out;
-    MediaPlayer mp;
+    private int audioIndex = -1;
+    IntentFilter filterRefreshUpdate;
+    public static final String Broadcast_PLAY_NEW_AUDIO = "com.valdioveliu.valdio.audioplayer.PlayNewAudio";
+
+    private Button previous, next, start;
+
+    private MediaPlayerService player;
+    boolean serviceBound = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,197 +71,201 @@ public class MediaPlayerActivity extends AppCompatActivity {
         cursor.moveToFirst();
         String position = cursor.getString(cursor.getColumnIndex(TouristListContract.TouristListEntry.COLUMN_POSITION));
         listOfTitles = new ArrayList<>();
-        cursor = turistListDbQuery.getAudioCursor("1");
+        cursor = turistListDbQuery.getUriByPosition();
 
+        //guziczki
+        previous = findViewById(R.id.button_previous);
+        next = findViewById(R.id.next_button);
+        start = findViewById(R.id.start_stop_button);
+        previous.setOnClickListener(this);
+        next.setOnClickListener(this);
+        start.setOnClickListener(this);
 
 
         mSeekBar = findViewById(R.id.seek_bar);
-        File output = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_MUSIC),
-                title);
-        timer = new Timer();
-        try {
-            FileInputStream fis = new FileInputStream(output);
-            takeInputStream(fis);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
 
         for(cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()){
-            listOfTitles.add(cursor.getString(cursor.getColumnIndex(TouristListContract.TouristListEntry.COLUMN_AUDIO)));
+            listOfTitles.add(cursor.getString(cursor.getColumnIndex(TouristListContract.TouristListEntry.COLUMN_LOCAL_URI)));
         }
-        int playListSize=cursor.getCount()-Integer.parseInt(position);
+        int pos = Integer.parseInt(position);
 
-        if(playListSize>1) playNext();
+//        playAudio(listOfTitles.get(pos));
 
-
-        mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                if(mp != null && b){
-                    mp.seekTo(i * 1000);
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-
-        mp.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-
-//                playNext(cursor, mediaPlayer, i);
-
-//                mediaPlayer.start();
-            }
-        });
-
+//play the first audio in the ArrayList
+        playAudio(pos);
+        filterRefreshUpdate = new IntentFilter();
+        filterRefreshUpdate.addAction("andorid.mybroadcast");
+    }
+    Integer progress,duration;
+    private Handler mHandler = new Handler();
+    public void updateSeekBar(int progress, int duration){
+        mSeekBar.setProgress(progress);
+        mSeekBar.setMax(duration/1000);
 
     }
 
-    private void updateSeekBar(final MediaPlayer mediaPlayer){
-        this.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if(mediaPlayer!=null){
-                    int mCurrentPosition = mediaPlayer.getCurrentPosition()/1000;
-                    mSeekBar.setProgress(mCurrentPosition);
-                    mSeekBar.setMax(mediaPlayer.getDuration()/1000);
-                }
-                mHandler.postDelayed(this, 500);
-            }
-        });
-    }
 
-    public void playFile()
-    {
-        try {
-            mp = new MediaPlayer();
-            FileInputStream fis = new FileInputStream(convertedFile);
-            mp.setDataSource(fis.getFD());
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            MediaPlayerService.LocalBinder binder = (MediaPlayerService.LocalBinder) service;
+            player = binder.getService();
+            serviceBound = true;
 
-            Toast.makeText(this, "Success, Path has been set", Toast.LENGTH_SHORT).show();
-
-            mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            mp.prepare();
-            Toast.makeText(this, "Media Player prepared", Toast.LENGTH_SHORT).show();
-
-            mp.start();
-
-            updateSeekBar(mp);
-            Toast.makeText(this, "Media Player playing", Toast.LENGTH_SHORT).show();
-        } catch (IllegalArgumentException e) {
-            Log.e(TAG, e.toString());
-            e.printStackTrace();
-        } catch (IllegalStateException e) {
-            Log.e(TAG, e.toString());
-            e.printStackTrace();
-        } catch (IOException e) {
-            Log.e(TAG, e.toString());
-            e.printStackTrace();
+            Toast.makeText(MediaPlayerActivity.this, "Service Bound", Toast.LENGTH_SHORT).show();
         }
 
-    }//end playFile
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            serviceBound = false;
+        }
+    };
 
-    public void takeInputStream(InputStream stream) throws IOException
-    {
+   /* private void playAudio(String media) {
+        //Check is service is active
+        if (!serviceBound) {
+            Intent playerIntent = new Intent(this, MediaPlayerService.class);
+            playerIntent.putExtra("media", media);
+            startService(playerIntent);
+            bindService(playerIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        } else {
+            //Service is active
+            //Send media with BroadcastReceiver
+        }
+    }*/
 
-        try
-        {
-            convertedFile = File.createTempFile("convertedFile", ".dat", getDir("filez", 0));
-            Toast.makeText(this, "Successful file and folder creation.", Toast.LENGTH_SHORT).show();
 
-            out = new FileOutputStream(convertedFile);
-            Toast.makeText(this, "Success out set as output stream.", Toast.LENGTH_SHORT).show();
 
-            //RIGHT AROUND HERE -----------
 
-            byte buffer[] = new byte[16384];
-            int length = 0;
-            while ( (length = stream.read(buffer)) != -1 )
-            {
-                out.write(buffer,0, length);
-            }
 
-            //stream.read(buffer);
-            Toast.makeText(this, "Success buffer is filled.", Toast.LENGTH_SHORT).show();
-            out.close();
 
-            playFile();
-        }catch(Exception e)
-        {
-            Log.e(TAG, e.toString());
-            e.printStackTrace();
-        }//end catch
-    }//end grabBuffer
+    private void playAudio(int audioIndex) {
+        //Check is service is active
+        if (!serviceBound) {
+            //Store Serializable audioList to SharedPreferences
+            StorageUtil storage = new StorageUtil(getApplicationContext());
+            storage.storeAudio(listOfTitles);
+            storage.storeAudioIndex(audioIndex);
 
+            Intent playerIntent = new Intent(this, MediaPlayerService.class);
+            startService(playerIntent);
+            bindService(playerIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        } else {
+            //Store the new audioIndex to SharedPreferences
+            StorageUtil storage = new StorageUtil(getApplicationContext());
+            storage.storeAudioIndex(audioIndex);
+
+            //Service is active
+            //Send a broadcast to the service -> PLAY_NEW_AUDIO
+            Intent broadcastIntent = new Intent(Broadcast_PLAY_NEW_AUDIO);
+            sendBroadcast(broadcastIntent);
+        }
+    }
+
+    public void doBindService(){
+        Intent playerIntent = new Intent(this, MediaPlayerService.class);
+        startService(playerIntent);
+        bindService(playerIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+//            duration = intent.getIntExtra("DURATION", 0);
+//            progress = intent.getIntExtra("PROGRESS", 0);
+//            updateSeekBar(progress, duration);
+        }
+    };
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        musicMethodsHandler.post(musicRun);
+    }
 
     @Override
     protected void onPause() {
+        musicMethodsHandler.removeCallbacks(musicRun);
         super.onPause();
-        if(mp!=null){
-            mp.stop();
-        }
-    }
-
-//    private void playNext(Cursor cursor, MediaPlayer mediaPlayer, int i){
-//        i++;
-//        mediaPlayer.seekTo(0);
-//        updateSeekBar(mediaPlayer);
-//        cursor.moveToFirst();
-//        String position = cursor.getString(cursor.getColumnIndex(TouristListContract.TouristListEntry.COLUMN_POSITION));
-//        cursor.close();
-//        if(position!=null){
-//            try {
-//                cursor = turistListDbQuery.getAudioTitle(position+i);
-//                cursor.moveToFirst();
-//                String title = cursor.getString(cursor.getColumnIndex(TouristListContract.TouristListEntry.COLUMN_AUDIO));
-//                File output = new File(Environment.getExternalStoragePublicDirectory(
-//                        Environment.DIRECTORY_MUSIC),
-//                        title);
-//                FileInputStream fis = new FileInputStream(output);
-//                takeInputStream(fis);
-//            }catch (Exception e){
-//
-//            }
-//        }
-//
-//    }
-
-    public void playNext() {
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                mp.reset();
-                File output =
-                new File(Environment.getExternalStoragePublicDirectory(
-                        Environment.DIRECTORY_MUSIC),
-                        listOfTitles.get(++i));
-                FileInputStream fis = null;
-                mp =MediaPlayer.create(MediaPlayerActivity.this, Uri.parse(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)+listOfTitles.get(++i)));
-                mp.start();
-
-                if (listOfTitles.size() > i+1) {
-                    playNext();
-                }
-            }
-        },mp.getDuration()+100);
+//        unregisterReceiver(receiver);
     }
 
     @Override
-    public void onDestroy() {
-        if (mp.isPlaying())
-            mp.stop();
-        timer.cancel();
-        super.onDestroy();
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.putBoolean("ServiceState", serviceBound);
+        super.onSaveInstanceState(savedInstanceState);
     }
 
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        serviceBound = savedInstanceState.getBoolean("ServiceState");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (serviceBound) {
+            unbindService(serviceConnection);
+            //service is active
+            player.stopSelf();
+        }
+    }
+
+
+    Handler musicMethodsHandler = new Handler();
+    Runnable musicRun = new Runnable() {
+        @Override
+        public void run() {
+            if (serviceBound == true){ // Check if service bounded
+                if (duration == null){ // Put data in it one time
+                    duration = player.getDuration();
+                    Log.v("Music dur: ", duration.toString());
+                    mSeekBar.setMax(duration);
+                }
+                progress = player.getCurrentPos();
+                Log.v("Music prog:", progress.toString());
+                mSeekBar.setProgress(progress);
+            }else if(serviceBound == false){ // if service is not bounded log it
+                Log.v("Still waiting to bound", Boolean.toString(serviceBound));
+            }
+            musicMethodsHandler.postDelayed(this, 1000);
+            duration=null;
+
+
+        }
+
+    };
+
+    boolean ispressed = false;
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()){
+            case R.id.next_button:
+                if(serviceBound==true){
+                    player.skipToNext();
+                }
+                break;
+            case R.id.start_stop_button:
+                if(serviceBound==true){
+
+                    if(ispressed){
+                        ispressed= false;
+                        player.resumeMedia();
+                    }else {
+                        ispressed=true;
+                        player.pauseMedia();
+                    }
+                }
+                break;
+            case R.id.button_previous:
+                if(serviceBound==true){
+                    player.skipToPrevious();
+                }
+                break;
+
+        }
+    }
 }

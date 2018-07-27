@@ -51,10 +51,10 @@ public class TuristListDbQuery {
                 null);
     }
 
-    public Cursor getUriByPosition (String position){
+    public Cursor getUriByPosition (){
         String[] ary = new String[] {TouristListContract.TouristListEntry.COLUMN_LOCAL_URI};
-        String selection = TouristListContract.TouristListEntry.COLUMN_POSITION + " = ?";
-        String[] selectionArgs = {position};
+      /*  String selection = TouristListContract.TouristListEntry.COLUMN_POSITION + " = ?";
+        String[] selectionArgs = {};*/
         return mDb.query(TouristListContract.TouristListEntry.TABLE_NAME,
                 ary,
                 null,

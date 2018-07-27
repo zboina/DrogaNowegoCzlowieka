@@ -59,7 +59,7 @@ public class TrackListActivity extends AppCompatActivity implements  TrackListAd
         Cursor cursor = turistListDbQuery.getQueriedTouristList("1");
         trackListAdapter = new TrackListAdapter(this,cursor,this);
         mRecyclerView.setAdapter(trackListAdapter);
-//        MySingleton.getInstance(this).getRequestQueue();
+
         temp = new HashMap<>();
         cursor = turistListDbQuery.getAudioCursor("1");
         MainActivity.verifyStoragePermissions(this);
