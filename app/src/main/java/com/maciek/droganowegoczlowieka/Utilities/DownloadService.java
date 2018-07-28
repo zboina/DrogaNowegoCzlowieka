@@ -28,6 +28,7 @@ public class DownloadService extends IntentService {
 
     private int result = Activity.RESULT_CANCELED;
     public static final String URL = "urlpath";
+    public static final String DIRECTORY = "directory";
     public static final String FILENAME = "filename";
     public static final String FILEPATH = "filepath";
     public static final String RESULT = "result";
@@ -43,14 +44,27 @@ public class DownloadService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         String urlPath = intent.getStringExtra(URL);
         String fileName = intent.getStringExtra(FILENAME);
-        File output = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_MUSIC),
-                fileName);
+        String directory = intent.getStringExtra(DIRECTORY);
+        File output;
+        if(directory.equals("audio")){
+            output = new File(Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_MUSIC),
+                    fileName);
+        }else if(directory.equals("picture")){
+            output = new File(Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_PICTURES),
+                    fileName);
+        }else {
+            output = new File(Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_MOVIES),
+                    fileName);
+        }
+
         int counter = intent.getIntExtra(COUNTER, 0);
         counter++;
         if (output.exists()) {
             result =-1;
-            publishResults(output.getAbsolutePath(), result, fileName, counter);
+            publishResults(output.getAbsolutePath(), result, fileName, counter, directory);
         }else {
             try {
                 URL u = new URL(urlPath);
@@ -74,16 +88,17 @@ public class DownloadService extends IntentService {
 
             }
 
-            publishResults(output.getAbsolutePath(), result, fileName, counter);
+            publishResults(output.getAbsolutePath(), result, fileName, counter, directory);
         }
     }
 
-    private void publishResults(String outputPath, int result, String fileName, int counter) {
+    private void publishResults(String outputPath, int result, String fileName, int counter,String directory) {
         Intent intent = new Intent(NOTIFICATION);
         intent.putExtra(FILEPATH, outputPath);
         intent.putExtra(FILENAME, fileName);
         intent.putExtra(RESULT, result);
         intent.putExtra(COUNTER, counter );
+        intent.putExtra(DIRECTORY, directory);
         sendBroadcast(intent);
     }
 }

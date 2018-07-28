@@ -2,9 +2,6 @@ package com.maciek.droganowegoczlowieka.Adapter;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.media.MediaPlayer;
-import android.net.Uri;
-import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -109,7 +106,7 @@ public class TrackListAdapter extends RecyclerView.Adapter<TrackListAdapter.View
     private String getTrackUri(int position){
         if (mCursor!=null){
             mCursor.moveToPosition(position);
-            return mCursor.getString(mCursor.getColumnIndex(TouristListContract.TouristListEntry.COLUMN_LOCAL_URI));
+            return mCursor.getString(mCursor.getColumnIndex(TouristListContract.TouristListEntry.COLUMN_AUDIO_URI));
         }
         return null;
     }

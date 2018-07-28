@@ -8,18 +8,16 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
-import android.net.Uri;
-import android.os.Environment;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.os.IBinder;
-import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
@@ -30,15 +28,8 @@ import com.maciek.droganowegoczlowieka.MediaPlayer.MediaPlayerService;
 import com.maciek.droganowegoczlowieka.MediaPlayer.StorageUtil;
 import com.maciek.droganowegoczlowieka.R;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class MediaPlayerActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -53,6 +44,7 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
     public static final String Broadcast_PLAY_NEW_AUDIO = "com.valdioveliu.valdio.audioplayer.PlayNewAudio";
 
     private Button previous, next, start;
+    private ImageView imageView;
 
     private MediaPlayerService player;
     boolean serviceBound = false;
@@ -80,16 +72,17 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         previous.setOnClickListener(this);
         next.setOnClickListener(this);
         start.setOnClickListener(this);
+        imageView = findViewById(R.id.image_view_media_player);
 
 
         mSeekBar = findViewById(R.id.seek_bar);
 
 
         for(cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()){
-            listOfTitles.add(cursor.getString(cursor.getColumnIndex(TouristListContract.TouristListEntry.COLUMN_LOCAL_URI)));
+            listOfTitles.add(cursor.getString(cursor.getColumnIndex(TouristListContract.TouristListEntry.COLUMN_AUDIO_URI)));
         }
         int pos = Integer.parseInt(position);
-
+        changeImageView(listOfTitles.get(pos));
 //        playAudio(listOfTitles.get(pos));
 
 //play the first audio in the ArrayList
@@ -183,11 +176,17 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
     protected void onResume() {
         super.onResume();
         musicMethodsHandler.post(musicRun);
+        if(serviceBound){
+            player.resumeMedia();
+        }
     }
 
     @Override
     protected void onPause() {
         musicMethodsHandler.removeCallbacks(musicRun);
+        if(serviceBound) {
+            player.pauseMedia();
+        }
         super.onPause();
 //        unregisterReceiver(receiver);
     }
@@ -214,7 +213,8 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
-
+    String currentSong;
+    String tempSong;
     Handler musicMethodsHandler = new Handler();
     Runnable musicRun = new Runnable() {
         @Override
@@ -225,9 +225,14 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
                     Log.v("Music dur: ", duration.toString());
                     mSeekBar.setMax(duration);
                 }
+                currentSong=player.getActiveAudio();
                 progress = player.getCurrentPos();
                 Log.v("Music prog:", progress.toString());
                 mSeekBar.setProgress(progress);
+                changeImageView(currentSong);
+                playVideo(currentSong);
+
+
             }else if(serviceBound == false){ // if service is not bounded log it
                 Log.v("Still waiting to bound", Boolean.toString(serviceBound));
             }
@@ -238,6 +243,46 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         }
 
     };
+
+    private void changeImageView(String currentSong){
+        cursor = turistListDbQuery.getPictureUriByAudioUri(currentSong);
+        cursor.moveToFirst();
+        String stringUrl = cursor.getString(0);
+        if(stringUrl.contains("null")){
+            stringUrl="/storage/emulated/0/Pictures/turysta-dialog-malzenski.jpg";
+        }
+        try{
+            URL url = new URL("file://"+stringUrl);
+            Bitmap bitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+            imageView.setImageBitmap(bitmap);
+        }catch (Exception e){
+
+        }
+
+    }
+    String stringVideoUrl;
+    private void playVideo(String currentSong){
+        cursor = turistListDbQuery.getVideoUriByAudioUri(currentSong);
+        cursor.moveToFirst();
+        stringVideoUrl =cursor.getString(0);
+        if(stringVideoUrl!=null){
+            try {
+                imageView.setClickable(true);
+                imageView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent intent = new Intent(getApplicationContext(), VideoPlayerActivity.class);
+                        intent.putExtra("URI", stringVideoUrl);
+                        startActivity(intent);
+                    }
+                });
+            }catch (Exception e){
+
+            }
+        }else {
+            imageView.setClickable(false);
+        }
+    }
 
     boolean ispressed = false;
     @Override
@@ -268,4 +313,5 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
 
         }
     }
+
 }

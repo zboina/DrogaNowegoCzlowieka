@@ -10,7 +10,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 public class InsertPositionToList {
     
-    public static void insertTitleTypePosName(SQLiteDatabase db, String title, int type_id, int position, String name) {
+    public static void insertAudiJpgDataByPos(SQLiteDatabase db, String title, int type_id, int position, String name, String jpgName, boolean isActive) {
         if (db == null) {
             return;
         }
@@ -20,6 +20,9 @@ public class InsertPositionToList {
         cv.put(TouristListContract.TouristListEntry.COLUMN_POSITION, position);
         cv.put(TouristListContract.TouristListEntry.COLUMN_TYPE_ID, type_id);
         cv.put(TouristListContract.TouristListEntry.COLUMN_NAME, name);
+        cv.put(TouristListContract.TouristListEntry.COLUMN_PICTURE, jpgName);
+        cv.put(TouristListContract.TouristListEntry.COLUMN_IS_ACTIVE, isActive);
+
 
         //insert all guests in one transaction
         try {
@@ -36,19 +39,86 @@ public class InsertPositionToList {
 
     }
 
-    public static void insertUri(SQLiteDatabase db, String uri,String audio) {
+    public static void insertAudioUri(SQLiteDatabase db, String uri, String audio) {
         if (db == null) {
             return;
         }
 
         ContentValues cv = new ContentValues();
 
-        cv.put(TouristListContract.TouristListEntry.COLUMN_LOCAL_URI, uri);
+        cv.put(TouristListContract.TouristListEntry.COLUMN_AUDIO_URI, uri);
 
         try {
             db.beginTransaction();
             //clear the table first
             db.update(TouristListContract.TouristListEntry.TABLE_NAME, cv, "AUDIO=?", new String[] {audio} );
+            db.setTransactionSuccessful();
+        } catch (SQLException e) {
+            //too bad :(
+        } finally {
+            db.endTransaction();
+        }
+
+    }
+
+    public static void insertVideo(SQLiteDatabase db, String video, String audio) {
+        if (db == null) {
+            return;
+        }
+
+        ContentValues cv = new ContentValues();
+
+        cv.put(TouristListContract.TouristListEntry.COLUMN_VIDEO, video);
+
+        try {
+            db.beginTransaction();
+            //clear the table first
+            db.update(TouristListContract.TouristListEntry.TABLE_NAME, cv, "AUDIO=?", new String[] {audio} );
+            db.setTransactionSuccessful();
+        } catch (SQLException e) {
+            //too bad :(
+        } finally {
+            db.endTransaction();
+        }
+
+    }
+
+
+    public static void insertPictureUri(SQLiteDatabase db, String uri, String audio) {
+        if (db == null) {
+            return;
+        }
+
+        ContentValues cv = new ContentValues();
+
+        cv.put(TouristListContract.TouristListEntry.COLUMN_PICTURE_URI, uri);
+
+        try {
+            db.beginTransaction();
+            //clear the table first
+            db.update(TouristListContract.TouristListEntry.TABLE_NAME, cv, "PICTURE=?", new String[] {audio} );
+            db.setTransactionSuccessful();
+        } catch (SQLException e) {
+            //too bad :(
+        } finally {
+            db.endTransaction();
+        }
+
+    }
+
+    public static void insertVideoUri(SQLiteDatabase db, String uri, String video) {
+        if (db == null) {
+            return;
+        }
+
+        ContentValues cv = new ContentValues();
+
+        cv.put(TouristListContract.TouristListEntry.COLUMN_VIDEO_URI, uri);
+
+        try {
+            db.beginTransaction();
+            //clear the table first
+            db.update(TouristListContract.TouristListEntry.TABLE_NAME, cv, "VIDEO=?", new String[] {video} );
             db.setTransactionSuccessful();
         } catch (SQLException e) {
             //too bad :(

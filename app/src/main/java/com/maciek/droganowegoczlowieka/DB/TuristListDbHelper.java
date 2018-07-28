@@ -15,7 +15,7 @@ import java.util.ArrayList;
  */
 
 public class TuristListDbHelper extends SQLiteOpenHelper {
-    public static final int DATABASE_VERSION = 20;
+    public static final int DATABASE_VERSION = 33;
     public static final String DATABASE_NAME = "TouristSet.db";
 
     private static final String SQL_CREATE_ENTRIES =
@@ -24,7 +24,12 @@ public class TuristListDbHelper extends SQLiteOpenHelper {
                     TouristListContract.TouristListEntry.COLUMN_POSITION + " NUMBER,"+
                     TouristListContract.TouristListEntry.COLUMN_AUDIO + " TEXT," +
                     TouristListContract.TouristListEntry.COLUMN_NAME + " TEXT," +
-                    TouristListContract.TouristListEntry.COLUMN_LOCAL_URI + " TEXT," +
+                    TouristListContract.TouristListEntry.COLUMN_AUDIO_URI + " TEXT," +
+                    TouristListContract.TouristListEntry.COLUMN_PICTURE + " TEXT," +
+                    TouristListContract.TouristListEntry.COLUMN_PICTURE_URI + " TEXT," +
+                    TouristListContract.TouristListEntry.COLUMN_VIDEO + " TEXT," +
+                    TouristListContract.TouristListEntry.COLUMN_VIDEO_URI + " TEXT," +
+                    TouristListContract.TouristListEntry.COLUMN_IS_ACTIVE + " BOOLEAN," +
                     TouristListContract.TouristListEntry.COLUMN_TYPE_ID + " NUMBER);";
 
     private static final String SQL_DELETE_ENTRIES =

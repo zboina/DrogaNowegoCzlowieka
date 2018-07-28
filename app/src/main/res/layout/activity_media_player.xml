@@ -5,14 +5,22 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.maciek.droganowegoczlowieka.Activities.MediaPlayerActivity">
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/image_view_media_player"
+        android:layout_above="@+id/linear_layout_media_player"/>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:layout_alignParentBottom="true"
+        android:id="@+id/linear_layout_media_player">
         <SeekBar
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/seek_bar"/>
+            android:id="@+id/seek_bar"
+            />
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

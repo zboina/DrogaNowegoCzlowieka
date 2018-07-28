@@ -78,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.button_home_church:
                 VolleyGetRequest volleyGetRequest = new VolleyGetRequest(this, db);
                 volleyGetRequest.getNameAndPosition(1);
+//                volleyGetRequest.getVideoAndAudio(1);
                 Toast.makeText(this, "start", Toast.LENGTH_SHORT).show();
 
 //                mIntent.putExtra("type_id", 3);
@@ -107,11 +108,51 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         intent.putExtra(DownloadService.FILENAME, data);
                         intent.putExtra(DownloadService.URL,
                                 mUrl);
+                        intent.putExtra(DownloadService.DIRECTORY, "audio");
                         intent.putExtra(DownloadService.COUNTER, progressStatus);
                         startService(intent);
                     }while(cursor.moveToNext());
                 }
-
+                cursor = turistListDbQuery.getPictureCursor("1");
+                if (cursor.moveToFirst()){
+                    do{
+                        progressBar.setVisibility(View.VISIBLE);
+                        progressStatus = cursor.getPosition();
+                        String data = cursor.getString(cursor.getColumnIndex("PICTURE"));
+                        String mUrl="http://android.x25.pl/NowaDroga/foto/"+ data;
+                        Intent intent = new Intent(this, DownloadService.class);
+                        // add infos for the service which file to download and where to store
+                        intent.putExtra(DownloadService.FILENAME, data);
+                        intent.putExtra(DownloadService.URL,
+                                mUrl);
+                        intent.putExtra(DownloadService.DIRECTORY, "picture");
+                        intent.putExtra(DownloadService.COUNTER, progressStatus);
+                        startService(intent);
+                    }while(cursor.moveToNext());
+                }
+                cursor = turistListDbQuery.getVideoCursor("1");
+                if (cursor.moveToFirst()){
+                    do{
+                        progressBar.setVisibility(View.VISIBLE);
+                        progressStatus = cursor.getPosition();
+                        String data = cursor.getString(cursor.getColumnIndex("VIDEO"));
+                        if(data==null||data.equals("null")){
+                            if(cursor.getPosition()+1==cursor.getCount()){
+                                progressStatus=50;
+                            }
+                            continue;
+                        }
+                        String mUrl="http://android.x25.pl/NowaDroga/video/"+ data;
+                        Intent intent = new Intent(this, DownloadService.class);
+                        // add infos for the service which file to download and where to store
+                        intent.putExtra(DownloadService.FILENAME, data);
+                        intent.putExtra(DownloadService.URL,
+                                mUrl);
+                        intent.putExtra(DownloadService.DIRECTORY, "video");
+                        intent.putExtra(DownloadService.COUNTER, progressStatus);
+                        startService(intent);
+                    }while(cursor.moveToNext());
+                }
                 cursor.close();
                 break;
             case R.id.button_clear_list:
@@ -121,7 +162,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         TouristListContract.TouristListEntry.COLUMN_POSITION + " NUMBER,"+
                         TouristListContract.TouristListEntry.COLUMN_AUDIO + " TEXT," +
                         TouristListContract.TouristListEntry.COLUMN_NAME + " TEXT," +
-                        TouristListContract.TouristListEntry.COLUMN_LOCAL_URI + " TEXT," +
+                        TouristListContract.TouristListEntry.COLUMN_AUDIO_URI + " TEXT," +
                         TouristListContract.TouristListEntry.COLUMN_TYPE_ID + " NUMBER);");
                 Toast.makeText(this, "baza przeczyszczona", Toast.LENGTH_SHORT).show();
 
@@ -160,7 +201,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //                    Toast.makeText(getApplicationContext(),
 //                            "Download complete. Download URI: " + string,
 //                            Toast.LENGTH_SHORT).show();
-                    InsertPositionToList.insertUri(db, bundle.getString(DownloadService.FILEPATH), bundle.getString(DownloadService.FILENAME));
+                    if(bundle.getString(DownloadService.DIRECTORY).equals("audio")){
+                        InsertPositionToList.insertAudioUri(db, bundle.getString(DownloadService.FILEPATH), bundle.getString(DownloadService.FILENAME));
+                    }else if(bundle.getString(DownloadService.DIRECTORY).equals("picture")){
+                        InsertPositionToList.insertPictureUri(db, bundle.getString(DownloadService.FILEPATH), bundle.getString(DownloadService.FILENAME));
+                    }else {
+                        InsertPositionToList.insertVideoUri(db, bundle.getString(DownloadService.FILEPATH), bundle.getString(DownloadService.FILENAME));
+                    }
+
 
                 } else {
                     Toast.makeText(getApplicationContext(), "Download failed",
