@@ -19,6 +19,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.maciek.droganowegoczlowieka.DB.TouristListContract;
@@ -31,51 +32,62 @@ import com.maciek.droganowegoczlowieka.R;
 import java.net.URL;
 import java.util.ArrayList;
 
+import static com.maciek.droganowegoczlowieka.Activities.TrackListActivity.TITLE;
+import static com.maciek.droganowegoczlowieka.Activities.TrackListActivity.TYPE_ID;
+import static com.maciek.droganowegoczlowieka.MediaPlayer.MediaPlayerService.ACTION_PLAY;
+
 public class MediaPlayerActivity extends AppCompatActivity implements View.OnClickListener {
 
     private SQLiteDatabase db;
     private TuristListDbQuery turistListDbQuery;
     private TuristListDbHelper turistListDbHelper;
     private SeekBar mSeekBar;
+    private TextView mTextView;
     private Cursor cursor;
     ArrayList<String> listOfTitles;
     private int audioIndex = -1;
     IntentFilter filterRefreshUpdate;
     public static final String Broadcast_PLAY_NEW_AUDIO = "com.valdioveliu.valdio.audioplayer.PlayNewAudio";
 
-    private Button previous, next, start;
+    private Button previous, next, start, showList;
     private ImageView imageView;
-
+    String position;
     private MediaPlayerService player;
     boolean serviceBound = false;
+    private String typeId;
+    private Boolean isAudioGood=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_media_player);
         Intent intent = getIntent();
-        String title = intent.getStringExtra(TrackListActivity.TITLE);
+        String title = intent.getStringExtra(TITLE);
         turistListDbHelper = new TuristListDbHelper(this);
 
         db = turistListDbHelper.getReadableDatabase();
         turistListDbQuery = new TuristListDbQuery(db);
         cursor = turistListDbQuery.getPosition(title);
         cursor.moveToFirst();
-        String position = cursor.getString(cursor.getColumnIndex(TouristListContract.TouristListEntry.COLUMN_POSITION));
+        position = cursor.getString(cursor.getColumnIndex(TouristListContract.TouristListEntry.COLUMN_POSITION));
         listOfTitles = new ArrayList<>();
-        cursor = turistListDbQuery.getUriByPosition();
+        cursor = turistListDbQuery.getAudioUriByTypeId(intent.getStringExtra(TYPE_ID));
+        typeId = intent.getStringExtra(TYPE_ID);
 
         //guziczki
         previous = findViewById(R.id.button_previous);
         next = findViewById(R.id.next_button);
         start = findViewById(R.id.start_stop_button);
+        mTextView = findViewById(R.id.text_view_current_song);
         previous.setOnClickListener(this);
         next.setOnClickListener(this);
         start.setOnClickListener(this);
         imageView = findViewById(R.id.image_view_media_player);
+        showList = findViewById(R.id.showList);
+        showList.setOnClickListener(this);
 
 
-        mSeekBar = findViewById(R.id.seek_bar);
+//        mSeekBar = findViewById(R.id.seek_bar);
 
 
         for(cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()){
@@ -87,16 +99,40 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
 
 //play the first audio in the ArrayList
         playAudio(pos);
+        isAudioGood=true;
         filterRefreshUpdate = new IntentFilter();
         filterRefreshUpdate.addAction("andorid.mybroadcast");
+
+
+
+       /* mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                if(serviceBound==true){
+                    if(player.getMediaPlayer() != null && b){
+                        player.getMediaPlayer().seekTo(i);
+                    }
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });*/
+
+
+
+
+
     }
     Integer progress,duration;
     private Handler mHandler = new Handler();
-    public void updateSeekBar(int progress, int duration){
-        mSeekBar.setProgress(progress);
-        mSeekBar.setMax(duration/1000);
-
-    }
 
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
@@ -161,6 +197,8 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         Intent playerIntent = new Intent(this, MediaPlayerService.class);
         startService(playerIntent);
         bindService(playerIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        playerIntent = new Intent(ACTION_PLAY);
+        sendBroadcast(playerIntent);
     }
 
     BroadcastReceiver receiver = new BroadcastReceiver() {
@@ -175,10 +213,16 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
     @Override
     protected void onResume() {
         super.onResume();
-        musicMethodsHandler.post(musicRun);
-        if(serviceBound){
-            player.resumeMedia();
+        if(!serviceBound){
+//            doBindService();
+            musicMethodsHandler.post(musicRun);
         }
+        if(serviceBound){
+            if(player.getMediaPlayer()!=null){
+               player.resumeMedia();
+            }
+        }
+
     }
 
     @Override
@@ -201,6 +245,9 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
     public void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         serviceBound = savedInstanceState.getBoolean("ServiceState");
+        if(serviceBound){
+            playMusic();
+        }
     }
 
     @Override
@@ -219,31 +266,42 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
     Runnable musicRun = new Runnable() {
         @Override
         public void run() {
-            if (serviceBound == true){ // Check if service bounded
-                if (duration == null){ // Put data in it one time
-                    duration = player.getDuration();
-                    Log.v("Music dur: ", duration.toString());
-                    mSeekBar.setMax(duration);
-                }
+            if (serviceBound == true){
+                // Check if service bounded
+//                if (duration == null){ // Put data in it one time
+//                    duration = player.getDuration();
+//                    Log.v("Music dur: ", duration.toString());
+//                    mSeekBar.setMax(duration);
+//                }
                 currentSong=player.getActiveAudio();
-                progress = player.getCurrentPos();
-                Log.v("Music prog:", progress.toString());
-                mSeekBar.setProgress(progress);
+//                progress = player.getCurrentPos();
+//                Log.v("Music prog:", progress.toString());
+//                mSeekBar.setProgress(progress);
                 changeImageView(currentSong);
+                changeTextView(currentSong);
                 playVideo(currentSong);
 
 
             }else if(serviceBound == false){ // if service is not bounded log it
                 Log.v("Still waiting to bound", Boolean.toString(serviceBound));
             }
-            musicMethodsHandler.postDelayed(this, 1000);
-            duration=null;
+            musicMethodsHandler.postDelayed(this, 50);
+//            duration=null;
 
 
         }
 
     };
+    private void changeTextView(String currentSong){
+        cursor = turistListDbQuery.getAudioTitle(currentSong);
+        cursor.moveToFirst();
+        String stringTitle = cursor.getString(0);
+        if(stringTitle!=null){
+            mTextView.setText("Teraz słuchosz: "+ stringTitle);
+        }
 
+
+    }
     private void changeImageView(String currentSong){
         cursor = turistListDbQuery.getPictureUriByAudioUri(currentSong);
         cursor.moveToFirst();
@@ -298,9 +356,11 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
 
                     if(ispressed){
                         ispressed= false;
+                        start.setCompoundDrawablesRelativeWithIntrinsicBounds(0,0,R.drawable.pause,0);
                         player.resumeMedia();
                     }else {
                         ispressed=true;
+                        start.setCompoundDrawablesRelativeWithIntrinsicBounds(0,0,R.drawable.play_icon,0);
                         player.pauseMedia();
                     }
                 }
@@ -310,8 +370,19 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
                     player.skipToPrevious();
                 }
                 break;
+            case R.id.showList:
+                Intent intent = new Intent(this, TrackListActivity.class);
+                intent.putExtra(TYPE_ID, typeId);
+                startActivity(intent);
+                break;
 
         }
+    }
+
+    private void playMusic(){
+        int pos = Integer.parseInt(position);
+        changeImageView(listOfTitles.get(pos));
+        playAudio(pos);
     }
 
 }

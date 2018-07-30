@@ -1,7 +1,10 @@
 package com.maciek.droganowegoczlowieka.Utilities;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
+import android.support.v4.widget.ContentLoadingProgressBar;
+import android.view.View;
 import android.widget.Toast;
 
 import com.android.volley.Cache;
@@ -15,6 +18,8 @@ import com.android.volley.toolbox.DiskBasedCache;
 import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.maciek.droganowegoczlowieka.Activities.DownloaderActivity;
+import com.maciek.droganowegoczlowieka.Activities.MainActivity;
 import com.maciek.droganowegoczlowieka.DB.InsertPositionToList;
 
 import org.json.JSONArray;
@@ -30,17 +35,19 @@ public class VolleyGetRequest {
     private Context context;
     SQLiteDatabase db;
     RequestQueue mRequestQueue;
+    boolean isDone;
     public VolleyGetRequest(Context context, SQLiteDatabase db){
         this.context=context;
         this.db=db;
     }
 
-    public void getNameAndPosition(final int typeId){
+    public void getNameAndPosition(final int typeId, final ContentLoadingProgressBar loader, final Context mContext){
 
         Cache cache = new DiskBasedCache(context.getCacheDir(), 1024 * 1024);
         Network network = new BasicNetwork(new HurlStack());
         mRequestQueue = new RequestQueue(cache, network);
         mRequestQueue.start();
+        isDone=false;
 
         String url = "http://android.x25.pl/NowaDroga/GET/getTitleAndPictureById.php?typeId="+typeId;
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
@@ -67,9 +74,7 @@ public class VolleyGetRequest {
                                 InsertPositionToList.insertAudiJpgDataByPos(db,audio, typeId, position, name, jpgname, isActive);
 
                             }
-                            getVideoAndAudio(typeId);
-//                            Toast.makeText(context, "done", Toast.LENGTH_SHORT).show();
-
+                            getVideoAndAudio(typeId, loader, mContext);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -78,14 +83,15 @@ public class VolleyGetRequest {
                 }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-
+                isDone = false;
             }
         });
         mRequestQueue.add(stringRequest);
     }
 
-    public void getVideoAndAudio(final int typeId) {
+    public void getVideoAndAudio(final int typeId, final ContentLoadingProgressBar loader, final Context mContext) {
         String url = "http://android.x25.pl/NowaDroga/GET/getVideoByTitle.php?typeId="+typeId;
+        isDone=false;
         StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
                 new Response.Listener<String>() {
                     @Override
@@ -97,9 +103,17 @@ public class VolleyGetRequest {
                             for(int i =0; i<jsonArray.length(); i++){
                                 String audio = jsonArray.getJSONObject(i).getString("audio");
                                 String video = jsonArray.getJSONObject(i).getString("plik");
+                                if(video.equals("null"))
+                                    video=null;
                                 InsertPositionToList.insertVideo(db,video,audio);
+
                             }
-                            Toast.makeText(context, "done", Toast.LENGTH_SHORT).show();
+
+                            if(typeId==4){
+                                loader.setVisibility(View.GONE);
+                                mContext.startActivity(new Intent(mContext, DownloaderActivity.class));
+
+                            }
 
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -113,6 +127,7 @@ public class VolleyGetRequest {
             }
         });
         mRequestQueue.add(stringRequest);
+
     }
 
 

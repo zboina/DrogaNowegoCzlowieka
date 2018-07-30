@@ -10,7 +10,7 @@ public class TouristListContract {
 
 
     public static  class TouristListEntry implements BaseColumns {
-        public static final String TABLE_NAME = "TURIST_LIST";
+        public static final String TABLE_NAME = "TOURIST_LIST";
         public static final String COLUMN_POSITION = "POSITION";
         public static final String COLUMN_AUDIO = "AUDIO";
         public static final String COLUMN_AUDIO_URI = "LOCAL_URI";

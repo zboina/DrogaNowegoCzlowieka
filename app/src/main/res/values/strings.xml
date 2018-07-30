@@ -1,8 +1,15 @@
 <resources>
     <string name="app_name">Droga Nowego Czlowieka</string>
     <string name="tourist_button">Turysta</string>
-    <string name="oaza_youth_button">DownloadMp3</string>
-    <string name="advanced_button">DBDebugger</string>
-    <string name="home_church_button">downloadTitles</string>
+    <string name="oaza_youth_button">Młodzież z Oazy</string>
+    <string name="advanced_button">Zaawansowani</string>
+    <string name="home_church_button">Domowy Kościół</string>
+    <string name="debug_db_button">DB_Debugger</string>
+    <string name="download_content_button">Pobierz audio/wideło</string>
+    <string name="title_activity_downloader">DownloaderActivity</string>
+    <string name="download_text">
+        Witaj podróżniku, zanim przejdziesz dalej i bedziesz w pełni cieszył się podróżą, pobierz zawartość pozostałych tras,
+        potrwa chwile a ten no. Kliknij pobierz. Zajmie jakies 100Mb na twoim telefonie. Potrwa w zaleznosci od predkosci internetu okolo 1 minute
+    </string>
     <!--TODO dodać wartości dla wszytkich referencji-->
 </resources>

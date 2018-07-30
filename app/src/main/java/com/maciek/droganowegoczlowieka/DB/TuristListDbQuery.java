@@ -64,10 +64,10 @@ public class TuristListDbQuery {
                 null);
     }
 
-    public Cursor getAudioTitle(String position){
-        String[] ary = new String[] {TouristListContract.TouristListEntry.COLUMN_POSITION, TouristListContract.TouristListEntry.COLUMN_NAME, TouristListContract.TouristListEntry.COLUMN_AUDIO_URI, TouristListContract.TouristListEntry.COLUMN_AUDIO};
-        String selection = TouristListContract.TouristListEntry.COLUMN_POSITION + " = ?";
-        String[] selectionArgs = {position};
+    public Cursor getAudioTitle(String audioUri){
+        String[] ary = new String[] {TouristListContract.TouristListEntry.COLUMN_NAME,};
+        String selection = TouristListContract.TouristListEntry.COLUMN_AUDIO_URI + " = ?";
+        String[] selectionArgs = {audioUri};
         return mDb.query(TouristListContract.TouristListEntry.TABLE_NAME,
                 ary,
                 selection,
@@ -77,14 +77,14 @@ public class TuristListDbQuery {
                 null);
     }
 
-    public Cursor getUriByPosition (){
+    public Cursor getAudioUriByTypeId(String typeId){
         String[] ary = new String[] {TouristListContract.TouristListEntry.COLUMN_AUDIO_URI};
-      /*  String selection = TouristListContract.TouristListEntry.COLUMN_POSITION + " = ?";
-        String[] selectionArgs = {};*/
+        String selection = TouristListContract.TouristListEntry.COLUMN_TYPE_ID + " = ?";
+        String[] selectionArgs = {typeId};
         return mDb.query(TouristListContract.TouristListEntry.TABLE_NAME,
                 ary,
-                null,
-                null,
+                selection,
+                selectionArgs,
                 null,
                 null,
                 null);

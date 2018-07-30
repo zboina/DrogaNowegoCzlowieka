@@ -34,6 +34,7 @@ public class DownloadService extends IntentService {
     public static final String RESULT = "result";
     public static final String NOTIFICATION = "com.vogella.android.service.receiver";
     public static final String COUNTER = "counter";
+    public static final String TYPE_ID = "type_id";
 
     public DownloadService() {
         super("DownloadService");
@@ -45,7 +46,12 @@ public class DownloadService extends IntentService {
         String urlPath = intent.getStringExtra(URL);
         String fileName = intent.getStringExtra(FILENAME);
         String directory = intent.getStringExtra(DIRECTORY);
+        String type_id = intent.getStringExtra(TYPE_ID);
         File output;
+        int counter = intent.getIntExtra(COUNTER, 0);
+        counter++;
+
+
         if(directory.equals("audio")){
             output = new File(Environment.getExternalStoragePublicDirectory(
                     Environment.DIRECTORY_MUSIC),
@@ -60,45 +66,45 @@ public class DownloadService extends IntentService {
                     fileName);
         }
 
-        int counter = intent.getIntExtra(COUNTER, 0);
-        counter++;
         if (output.exists()) {
             result =-1;
-            publishResults(output.getAbsolutePath(), result, fileName, counter, directory);
-        }else {
-            try {
-                URL u = new URL(urlPath);
-                HttpURLConnection c = (HttpURLConnection) u.openConnection();
-                c.setRequestMethod("GET");
-                c.setDoOutput(true);
-                c.connect();
-                FileOutputStream f = new FileOutputStream(output);
+            publishResults(output.getAbsolutePath(), result, fileName, counter, directory, type_id);
+        }else{
+                try {
+                    URL u = new URL(urlPath);
+                    HttpURLConnection c = (HttpURLConnection) u.openConnection();
+                    c.setRequestMethod("GET");
+                    c.setDoOutput(true);
+                    c.connect();
+                    FileOutputStream f = new FileOutputStream(output);
 
 
-                InputStream in = c.getInputStream();
+                    InputStream in = c.getInputStream();
 
-                byte[] buffer = new byte[1024];
-                int len1 = 0;
-                while ((len1 = in.read(buffer)) > 0) {
-                    f.write(buffer, 0, len1);
+                    byte[] buffer = new byte[1024];
+                    int len1 = 0;
+                    while ((len1 = in.read(buffer)) > 0) {
+                        f.write(buffer, 0, len1);
+                    }
+                    f.close();
+                    result = -1;
+                } catch (Exception e) {
+
                 }
-                f.close();
-                result = -1;
-            } catch (Exception e) {
 
+                publishResults(output.getAbsolutePath(), result, fileName, counter, directory, type_id);
             }
-
-            publishResults(output.getAbsolutePath(), result, fileName, counter, directory);
         }
-    }
 
-    private void publishResults(String outputPath, int result, String fileName, int counter,String directory) {
+
+    private void publishResults(String outputPath, int result, String fileName, int counter,String directory, String type_id) {
         Intent intent = new Intent(NOTIFICATION);
         intent.putExtra(FILEPATH, outputPath);
         intent.putExtra(FILENAME, fileName);
         intent.putExtra(RESULT, result);
         intent.putExtra(COUNTER, counter );
         intent.putExtra(DIRECTORY, directory);
+        intent.putExtra(TYPE_ID, type_id);
         sendBroadcast(intent);
     }
 }

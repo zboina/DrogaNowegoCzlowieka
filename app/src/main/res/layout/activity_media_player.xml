@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     tools:context="com.maciek.droganowegoczlowieka.Activities.MediaPlayerActivity">
     <ImageView
         android:layout_width="match_parent"
@@ -14,33 +15,58 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
+        android:background="@color/white"
         android:layout_alignParentBottom="true"
         android:id="@+id/linear_layout_media_player">
-        <SeekBar
-            android:layout_width="match_parent"
+        <!--<SeekBar-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:id="@+id/seek_bar"-->
+            <!--/>-->
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/seek_bar"
-            />
+            android:id="@+id/text_view_current_song"
+            android:text="Teraz słuchasz:"
+            android:textColor="@color/black"
+            android:textSize="16sp"/>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:weightSum="4">
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/button_previous"
-                android:text="powrot"/>
+                android:background="@drawable/button"
+                android:drawableEnd="@drawable/previous"
+                android:layout_weight="1"/>
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="start/stop"
                 android:id="@+id/start_stop_button"
+                android:drawableEnd="@drawable/pause"
+                android:gravity="center"
+                android:layout_weight="1"
+                android:background="@drawable/button"
                 />
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:id="@+id/next_button"
-                android:text="nastepna"/>
+                android:layout_weight="1"
+                android:drawableEnd="@drawable/skip_next"
+                android:background="@drawable/button"
+                />
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/showList"
+                android:background="@drawable/button"
+                android:drawableEnd="@drawable/ic_list"
+                android:layout_weight="1"
+                />
         </LinearLayout>
     </LinearLayout>
 </RelativeLayout>

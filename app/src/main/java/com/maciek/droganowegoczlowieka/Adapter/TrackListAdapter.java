@@ -45,7 +45,7 @@ public class TrackListAdapter extends RecyclerView.Adapter<TrackListAdapter.View
         String titleOfTrack = getTrackName(position);
         String posOfTrack = getTrackPos(position);
         holder.titleOfTrack.setText(titleOfTrack);
-        holder.positionOfTrack.setText(posOfTrack);
+        holder.positionOfTrack.setText(posOfTrack+".");
     }
 
     @Override

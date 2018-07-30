@@ -39,7 +39,7 @@ public class InsertPositionToList {
 
     }
 
-    public static void insertAudioUri(SQLiteDatabase db, String uri, String audio) {
+    public static void insertAudioUri(SQLiteDatabase db, String uri, String audio, String type_id) {
         if (db == null) {
             return;
         }
@@ -51,7 +51,7 @@ public class InsertPositionToList {
         try {
             db.beginTransaction();
             //clear the table first
-            db.update(TouristListContract.TouristListEntry.TABLE_NAME, cv, "AUDIO=?", new String[] {audio} );
+            db.update(TouristListContract.TouristListEntry.TABLE_NAME, cv, "AUDIO=? AND TYPE_ID =?", new String[] {audio,type_id} );
             db.setTransactionSuccessful();
         } catch (SQLException e) {
             //too bad :(
@@ -84,7 +84,7 @@ public class InsertPositionToList {
     }
 
 
-    public static void insertPictureUri(SQLiteDatabase db, String uri, String audio) {
+    public static void insertPictureUri(SQLiteDatabase db, String uri, String picture, String type_id) {
         if (db == null) {
             return;
         }
@@ -96,7 +96,7 @@ public class InsertPositionToList {
         try {
             db.beginTransaction();
             //clear the table first
-            db.update(TouristListContract.TouristListEntry.TABLE_NAME, cv, "PICTURE=?", new String[] {audio} );
+            db.update(TouristListContract.TouristListEntry.TABLE_NAME, cv, "PICTURE=? AND TYPE_ID =?", new String[] {picture, type_id} );
             db.setTransactionSuccessful();
         } catch (SQLException e) {
             //too bad :(
@@ -106,7 +106,7 @@ public class InsertPositionToList {
 
     }
 
-    public static void insertVideoUri(SQLiteDatabase db, String uri, String video) {
+    public static void insertVideoUri(SQLiteDatabase db, String uri, String video, String type_id) {
         if (db == null) {
             return;
         }
@@ -118,7 +118,7 @@ public class InsertPositionToList {
         try {
             db.beginTransaction();
             //clear the table first
-            db.update(TouristListContract.TouristListEntry.TABLE_NAME, cv, "VIDEO=?", new String[] {video} );
+            db.update(TouristListContract.TouristListEntry.TABLE_NAME, cv, "VIDEO=? AND TYPE_ID =?", new String[] {video, type_id} );
             db.setTransactionSuccessful();
         } catch (SQLException e) {
             //too bad :(
