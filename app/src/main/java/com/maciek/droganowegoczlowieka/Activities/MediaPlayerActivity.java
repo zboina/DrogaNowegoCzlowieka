@@ -54,6 +54,7 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
     String position;
     private MediaPlayerService player;
     boolean serviceBound = false;
+    String title;
     private String typeId;
     private Boolean isAudioGood=false;
 
@@ -62,7 +63,7 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_media_player);
         Intent intent = getIntent();
-        String title = intent.getStringExtra(TITLE);
+        title = intent.getStringExtra(TITLE);
         turistListDbHelper = new TuristListDbHelper(this);
 
         db = turistListDbHelper.getReadableDatabase();
@@ -213,23 +214,16 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
     @Override
     protected void onResume() {
         super.onResume();
-        if(!serviceBound){
-//            doBindService();
-            musicMethodsHandler.post(musicRun);
-        }
-        if(serviceBound){
-            if(player.getMediaPlayer()!=null){
-               player.resumeMedia();
-            }
-        }
-
+        playMusic();
+        musicMethodsHandler.post(musicRun);
     }
 
     @Override
     protected void onPause() {
         musicMethodsHandler.removeCallbacks(musicRun);
         if(serviceBound) {
-            player.pauseMedia();
+            player.stopMedia();
+
         }
         super.onPause();
 //        unregisterReceiver(receiver);
@@ -244,10 +238,6 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
     @Override
     public void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-        serviceBound = savedInstanceState.getBoolean("ServiceState");
-        if(serviceBound){
-            playMusic();
-        }
     }
 
     @Override
@@ -273,6 +263,7 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
 //                    Log.v("Music dur: ", duration.toString());
 //                    mSeekBar.setMax(duration);
 //                }
+                playMusic();
                 currentSong=player.getActiveAudio();
 //                progress = player.getCurrentPos();
 //                Log.v("Music prog:", progress.toString());
@@ -331,6 +322,9 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
                     public void onClick(View view) {
                         Intent intent = new Intent(getApplicationContext(), VideoPlayerActivity.class);
                         intent.putExtra("URI", stringVideoUrl);
+                        int pos = Integer.parseInt(position);
+                        intent.putExtra(TITLE, title);
+                        intent.putExtra(TYPE_ID, typeId);
                         startActivity(intent);
                     }
                 });
@@ -384,5 +378,10 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         changeImageView(listOfTitles.get(pos));
         playAudio(pos);
     }
+
+
+
+
+
 
 }
