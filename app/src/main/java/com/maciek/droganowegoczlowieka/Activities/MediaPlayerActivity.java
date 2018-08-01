@@ -12,11 +12,14 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -28,6 +31,7 @@ import com.maciek.droganowegoczlowieka.DB.TuristListDbQuery;
 import com.maciek.droganowegoczlowieka.MediaPlayer.MediaPlayerService;
 import com.maciek.droganowegoczlowieka.MediaPlayer.StorageUtil;
 import com.maciek.droganowegoczlowieka.R;
+import com.maciek.droganowegoczlowieka.Utilities.OnSwipeTouchListener;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -36,20 +40,22 @@ import static com.maciek.droganowegoczlowieka.Activities.TrackListActivity.TITLE
 import static com.maciek.droganowegoczlowieka.Activities.TrackListActivity.TYPE_ID;
 import static com.maciek.droganowegoczlowieka.MediaPlayer.MediaPlayerService.ACTION_PLAY;
 
-public class MediaPlayerActivity extends AppCompatActivity implements View.OnClickListener {
+public class MediaPlayerActivity extends AppCompatActivity implements View.OnClickListener, View.OnTouchListener {
 
     private SQLiteDatabase db;
     private TuristListDbQuery turistListDbQuery;
     private TuristListDbHelper turistListDbHelper;
     private SeekBar mSeekBar;
-    private TextView mTextView;
+    private FloatingActionButton mFloatingActionButton;
+    private TextView mTextView, trackTitleTextView;
     private Cursor cursor;
     ArrayList<String> listOfTitles;
     private int audioIndex = -1;
     IntentFilter filterRefreshUpdate;
     public static final String Broadcast_PLAY_NEW_AUDIO = "com.valdioveliu.valdio.audioplayer.PlayNewAudio";
 
-    private Button previous, next, start, showList;
+    private ImageButton previous, next, start;
+    private Button showList, goToMainMenu;
     private ImageView imageView;
     String position;
     private MediaPlayerService player;
@@ -80,12 +86,51 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         next = findViewById(R.id.next_button);
         start = findViewById(R.id.start_stop_button);
         mTextView = findViewById(R.id.text_view_current_song);
+        mFloatingActionButton = findViewById(R.id.launch_media_player);
+        trackTitleTextView = findViewById(R.id.track_name_text_view);
+        goToMainMenu = findViewById(R.id.GoToMainMenuButton);
+        goToMainMenu.setOnClickListener(this);
         previous.setOnClickListener(this);
         next.setOnClickListener(this);
         start.setOnClickListener(this);
         imageView = findViewById(R.id.image_view_media_player);
         showList = findViewById(R.id.showList);
         showList.setOnClickListener(this);
+        imageView.setOnTouchListener(new OnSwipeTouchListener(this){
+            @Override
+            public void onSwipeRight() {
+                super.onSwipeRight();
+                player.skipToPrevious();
+                ispressed = true;
+                start.setImageResource(R.drawable.ic_play_white);
+            }
+
+            @Override
+            public void onSwipeLeft() {
+                super.onSwipeLeft();
+                player.skipToNext();
+                ispressed = true;
+                start.setImageResource(R.drawable.ic_play_white);
+            }
+
+
+
+        });
+
+        switch (typeId){
+            case "1":
+                trackTitleTextView.setText("Turysta");
+                break;
+            case "2":
+                trackTitleTextView.setText("Oaza");
+                break;
+            case "3":
+                trackTitleTextView.setText("Domowy kościół");
+                break;
+            case "4":
+                trackTitleTextView.setText("Zaawansowani");
+                break;
+        }
 
 
 //        mSeekBar = findViewById(R.id.seek_bar);
@@ -276,7 +321,7 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
             }else if(serviceBound == false){ // if service is not bounded log it
                 Log.v("Still waiting to bound", Boolean.toString(serviceBound));
             }
-            musicMethodsHandler.postDelayed(this, 50);
+            musicMethodsHandler.postDelayed(this, 100);
 //            duration=null;
 
 
@@ -287,8 +332,11 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         cursor = turistListDbQuery.getAudioTitle(currentSong);
         cursor.moveToFirst();
         String stringTitle = cursor.getString(0);
+        cursor = turistListDbQuery.getPostionByAudioUri(currentSong);
+        cursor.moveToFirst();
+        String position = cursor.getString(0);
         if(stringTitle!=null){
-            mTextView.setText("Teraz słuchosz: "+ stringTitle);
+            mTextView.setText(position+". "+stringTitle);
         }
 
 
@@ -297,6 +345,7 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         cursor = turistListDbQuery.getPictureUriByAudioUri(currentSong);
         cursor.moveToFirst();
         String stringUrl = cursor.getString(0);
+
         if(stringUrl.contains("null")){
             stringUrl="/storage/emulated/0/Pictures/turysta-dialog-malzenski.jpg";
         }
@@ -309,6 +358,7 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         }
 
     }
+    String title2;
     String stringVideoUrl;
     private void playVideo(String currentSong){
         cursor = turistListDbQuery.getVideoUriByAudioUri(currentSong);
@@ -316,14 +366,19 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         stringVideoUrl =cursor.getString(0);
         if(stringVideoUrl!=null){
             try {
-                imageView.setClickable(true);
-                imageView.setOnClickListener(new View.OnClickListener() {
+                mFloatingActionButton.setVisibility(View.VISIBLE);
+                mFloatingActionButton.setClickable(true);
+                cursor = turistListDbQuery.getAudioByAudioUri(currentSong);
+                cursor.moveToFirst();
+                title2 =cursor.getString(0);
+                mFloatingActionButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         Intent intent = new Intent(getApplicationContext(), VideoPlayerActivity.class);
                         intent.putExtra("URI", stringVideoUrl);
                         int pos = Integer.parseInt(position);
-                        intent.putExtra(TITLE, title);
+
+                        intent.putExtra(TITLE, title2);
                         intent.putExtra(TYPE_ID, typeId);
                         startActivity(intent);
                     }
@@ -332,17 +387,20 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
 
             }
         }else {
-            imageView.setClickable(false);
+            mFloatingActionButton.setClickable(false);
+            mFloatingActionButton.setVisibility(View.GONE);
         }
     }
-
-    boolean ispressed = false;
+    int currentPosition;
+    boolean ispressed = true;
     @Override
     public void onClick(View view) {
         switch (view.getId()){
             case R.id.next_button:
                 if(serviceBound==true){
                     player.skipToNext();
+                    ispressed = true;
+                    start.setImageResource(R.drawable.ic_play_white);
                 }
                 break;
             case R.id.start_stop_button:
@@ -350,27 +408,43 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
 
                     if(ispressed){
                         ispressed= false;
-                        start.setCompoundDrawablesRelativeWithIntrinsicBounds(0,0,R.drawable.pause,0);
+                        start.setImageResource(R.drawable.ic_pause_circle);
                         player.resumeMedia();
                     }else {
                         ispressed=true;
-                        start.setCompoundDrawablesRelativeWithIntrinsicBounds(0,0,R.drawable.play_icon,0);
+                        start.setImageResource(R.drawable.ic_play_white);
                         player.pauseMedia();
+
                     }
                 }
                 break;
             case R.id.button_previous:
                 if(serviceBound==true){
                     player.skipToPrevious();
+                    ispressed = true;
+                    start.setImageResource(R.drawable.ic_play_white);
                 }
                 break;
             case R.id.showList:
                 Intent intent = new Intent(this, TrackListActivity.class);
                 intent.putExtra(TYPE_ID, typeId);
+                String audioUri = player.getActiveAudio();
+                cursor = turistListDbQuery.getAudioByAudioUri(audioUri);
+                cursor.moveToFirst();
+                title2 =cursor.getString(0);
+                intent.putExtra(TITLE, title2);
                 startActivity(intent);
+                break;
+            case R.id.GoToMainMenuButton:
+                startActivity(new Intent(this, MainActivity.class));
                 break;
 
         }
+    }
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(this, MainActivity.class));
+        super.onBackPressed();
     }
 
     private void playMusic(){
@@ -380,7 +454,10 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
     }
 
 
-
+    @Override
+    public boolean onTouch(View view, MotionEvent motionEvent) {
+       return false;
+    }
 
 
 

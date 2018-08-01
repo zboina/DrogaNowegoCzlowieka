@@ -35,7 +35,7 @@ public class DownloadService extends IntentService {
     public static final String NOTIFICATION = "com.vogella.android.service.receiver";
     public static final String COUNTER = "counter";
     public static final String TYPE_ID = "type_id";
-
+    public static final String COUNTERMAX = "counterMax";
     public DownloadService() {
         super("DownloadService");
     }
@@ -49,6 +49,7 @@ public class DownloadService extends IntentService {
         String type_id = intent.getStringExtra(TYPE_ID);
         File output;
         int counter = intent.getIntExtra(COUNTER, 0);
+        int counterMax = intent.getIntExtra(COUNTERMAX, 0);
         counter++;
 
 
@@ -68,7 +69,7 @@ public class DownloadService extends IntentService {
 
         if (output.exists()) {
             result =-1;
-            publishResults(output.getAbsolutePath(), result, fileName, counter, directory, type_id);
+            publishResults(output.getAbsolutePath(), result, fileName, counter, directory, type_id, counterMax);
         }else{
                 try {
                     URL u = new URL(urlPath);
@@ -92,12 +93,12 @@ public class DownloadService extends IntentService {
 
                 }
 
-                publishResults(output.getAbsolutePath(), result, fileName, counter, directory, type_id);
+                publishResults(output.getAbsolutePath(), result, fileName, counter, directory, type_id, counterMax);
             }
         }
 
 
-    private void publishResults(String outputPath, int result, String fileName, int counter,String directory, String type_id) {
+    private void publishResults(String outputPath, int result, String fileName, int counter,String directory, String type_id, int counterMax) {
         Intent intent = new Intent(NOTIFICATION);
         intent.putExtra(FILEPATH, outputPath);
         intent.putExtra(FILENAME, fileName);
@@ -105,6 +106,7 @@ public class DownloadService extends IntentService {
         intent.putExtra(COUNTER, counter );
         intent.putExtra(DIRECTORY, directory);
         intent.putExtra(TYPE_ID, type_id);
+        intent.putExtra(COUNTERMAX, counterMax);
         sendBroadcast(intent);
     }
 }

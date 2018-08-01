@@ -10,63 +10,108 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/image_view_media_player"
-        android:layout_above="@+id/linear_layout_media_player"/>
+        android:layout_above="@+id/linear_layout_media_player"
+        android:layout_alignParentTop="true"/>
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/launch_media_player"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="80dp"
+        android:clickable="false"
+        android:visibility="gone"
+        android:src="@drawable/ic_video_button" />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="@color/white"
         android:layout_alignParentBottom="true"
+        android:weightSum="3"
         android:id="@+id/linear_layout_media_player">
         <!--<SeekBar-->
             <!--android:layout_width="match_parent"-->
             <!--android:layout_height="wrap_content"-->
             <!--android:id="@+id/seek_bar"-->
             <!--/>-->
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Teraz słuchasz:"
+            android:textColor="@color/black"
+            android:textSize="14sp"/>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/text_view_current_song"
-            android:text="Teraz słuchasz:"
             android:textColor="@color/black"
             android:textSize="16sp"/>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:weightSum="4">
-            <Button
+            >
+            <ImageButton
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="36dp"
                 android:id="@+id/button_previous"
-                android:background="@drawable/button"
-                android:drawableEnd="@drawable/previous"
+                android:src="@drawable/ic_previous_white"
+                android:background="@drawable/button_media"
+                android:layout_marginEnd="1dp"
                 android:layout_weight="1"/>
-            <Button
+            <ImageButton
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="36dp"
                 android:id="@+id/start_stop_button"
-                android:drawableEnd="@drawable/pause"
+                android:src="@drawable/ic_play_white"
                 android:gravity="center"
                 android:layout_weight="1"
-                android:background="@drawable/button"
+                android:background="@drawable/button_media"
                 />
-            <Button
+            <ImageButton
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="36dp"
                 android:id="@+id/next_button"
                 android:layout_weight="1"
-                android:drawableEnd="@drawable/skip_next"
-                android:background="@drawable/button"
+                android:layout_marginStart="1dp"
+                android:src="@drawable/ic_skip_next"
+                android:background="@drawable/button_media"
+                android:drawableTint="@color/white"
                 />
+
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@color/szary_michala"
+            >
             <Button
+                android:id="@+id/GoToMainMenuButton"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:drawableStart="@drawable/ic_main_manu" />
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/showList"
-                android:background="@drawable/button"
-                android:drawableEnd="@drawable/ic_list"
+                android:id="@+id/track_name_text_view"
                 android:layout_weight="1"
+                android:textSize="22sp"
+                android:textColor="@color/black"
+                android:gravity="center"/>
+            <Button
+                android:id="@+id/showList"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:drawableEnd="@drawable/ic_list_black"
                 />
         </LinearLayout>
+
     </LinearLayout>
 </RelativeLayout>

@@ -3,4 +3,7 @@
     <style name="YourApplicationTheme" parent="android:style/Theme.NoTitleBar">
         <item name="android:buttonStyle">@style/button</item>
     </style>
+    <style name="ApplicationThemeMedia" parent="android:style/Theme.NoTitleBar">
+        <item name="android:buttonStyle">@style/button_media</item>
+    </style>
 </resources>

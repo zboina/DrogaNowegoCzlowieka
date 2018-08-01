@@ -16,6 +16,7 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.provider.MediaStore;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
@@ -43,7 +44,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     private AudioManager audioManager;
     private int resumePosition;
-
     private final IBinder iBinder = new LocalBinder();
     private MediaSessionManager mediaSessionManager;
     private MediaSessionCompat mediaSession;
@@ -135,6 +135,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public void onPrepared(MediaPlayer mp) {
         //Invoked when the media source is ready for playback.
         playMedia();
+        pauseMedia();
     }
 
 
@@ -208,6 +209,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             mediaPlayer.stop();
         }
     }
+    public int getCurrentPosition(){
+        return mediaPlayer.getCurrentPosition();
+    }
+    public MediaPlayer getMediaPlayer(){
+        return mediaPlayer;
+    }
 
     public void pauseMedia() {
         if (mediaPlayer.isPlaying()) {
@@ -218,10 +225,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     public void resumeMedia() {
         if (!mediaPlayer.isPlaying()) {
-            mediaPlayer.seekTo(resumePosition);
+            mediaPlayer.seekTo(resumePosition+55);
             mediaPlayer.start();
         }
     }
+
 
 ////////odtad wyjebac zmienic initMediaPlayer
 

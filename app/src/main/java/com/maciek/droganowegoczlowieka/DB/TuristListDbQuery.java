@@ -38,6 +38,19 @@ public class TuristListDbQuery {
                 null);
     }
 
+    public Cursor getAudioByAudioUri(String audioUri){
+        String[] ary = new String[] {TouristListContract.TouristListEntry.COLUMN_AUDIO};
+        String selection = TouristListContract.TouristListEntry.COLUMN_AUDIO_URI + " = ?";
+        String[] selectionArgs = {audioUri};
+        return mDb.query(TouristListContract.TouristListEntry.TABLE_NAME,
+                ary,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                null);
+    }
+
     public Cursor getPictureCursor(String type_id){
         String[] ary = new String[] {TouristListContract.TouristListEntry.COLUMN_PICTURE};
         String selection = TouristListContract.TouristListEntry.COLUMN_TYPE_ID + " = ?";
@@ -102,6 +115,19 @@ public class TuristListDbQuery {
                 null,
                 null);
 
+    }
+
+    public Cursor getPostionByAudioUri(String audioUri){
+        String[] ary = new String[] {TouristListContract.TouristListEntry.COLUMN_POSITION};
+        String selection = TouristListContract.TouristListEntry.COLUMN_AUDIO_URI + " = ?";
+        String[] selectionArgs = {audioUri};
+        return mDb.query(TouristListContract.TouristListEntry.TABLE_NAME,
+                ary,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                null);
     }
     public Cursor getPictureUriByAudioUri(String audio){
         String[] ary = new String[] {TouristListContract.TouristListEntry.COLUMN_PICTURE_URI};

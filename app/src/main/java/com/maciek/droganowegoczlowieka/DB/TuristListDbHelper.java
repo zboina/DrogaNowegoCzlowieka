@@ -15,7 +15,7 @@ import java.util.ArrayList;
  */
 
 public class TuristListDbHelper extends SQLiteOpenHelper {
-    public static final int DATABASE_VERSION = 62;
+    public static final int DATABASE_VERSION = 81;
     public static final String DATABASE_NAME = "TouristSet.db";
 
     private static final String SQL_CREATE_ENTRIES =

@@ -54,6 +54,7 @@ public class TrackListActivity extends AppCompatActivity implements  TrackListAd
     private ContentLoadingProgressBar loader;
     private int progressStatus;
     private int cursorMax;
+    String title;
     private ProgressBar progressBar;    int i=0;
 
 
@@ -71,6 +72,7 @@ public class TrackListActivity extends AppCompatActivity implements  TrackListAd
         TuristListDbQuery turistListDbQuery = new TuristListDbQuery(db);
         Intent intent = getIntent();
         typeId = intent.getStringExtra(TYPE_ID);
+        title = intent.getStringExtra(TITLE);
         Cursor cursor = turistListDbQuery.getQueriedTouristList(typeId);
         trackListAdapter = new TrackListAdapter(this,cursor,this);
         mRecyclerView.setAdapter(trackListAdapter);
@@ -83,8 +85,6 @@ public class TrackListActivity extends AppCompatActivity implements  TrackListAd
         Toast.makeText(this, "Readable: " + isExternalStorageReadable() + " Writable: " + isExternalStorageWritable(), Toast.LENGTH_LONG).show();
         cursor.close();
         loader = findViewById(R.id.loader_track_list);
-//        downloadConent(typeId);
-//        loader.setVisibility(View.VISIBLE);
 
 //        TODO: sprawdzić czy ktoś wyraził zgodę na używanie internetu// korzystanie z internal storage
 
@@ -125,40 +125,15 @@ public class TrackListActivity extends AppCompatActivity implements  TrackListAd
     }
 
 
-   /* private BroadcastReceiver receiver = new BroadcastReceiver() {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Bundle bundle = intent.getExtras();
-            if (bundle != null) {
-                int resultCode = bundle.getInt(DownloadService.RESULT);
-                if (resultCode == RESULT_OK) {
-                    progressBar.setProgress(bundle.getInt(DownloadService.COUNTER));
-                    if(bundle.getString(DownloadService.DIRECTORY).equals("audio")){
-                        InsertPositionToList.insertAudioUri(db, bundle.getString(DownloadService.FILEPATH), bundle.getString(DownloadService.FILENAME), bundle.getString(DownloadService.TYPE_ID) );
-                    }else if(bundle.getString(DownloadService.DIRECTORY).equals("picture")){
-                        InsertPositionToList.insertPictureUri(db, bundle.getString(DownloadService.FILEPATH), bundle.getString(DownloadService.FILENAME),  bundle.getString(DownloadService.TYPE_ID) );
-                    }else {
-                        InsertPositionToList.insertVideoUri(db, bundle.getString(DownloadService.FILEPATH), bundle.getString(DownloadService.FILENAME),  bundle.getString(DownloadService.TYPE_ID) );
-                    }if ((bundle.getInt(DownloadService.COUNTER)==cursorMax)){
-                            loader.setVisibility(View.GONE);
-                            progressBar.setVisibility(View.INVISIBLE);
-
-
-                    }
-
-//                    Toast.makeText(TrackListActivity.this, "Musze przemyslec jak dac znac ze skonczylo sie pobierac, ", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getApplicationContext(), "Download failed",
-                            Toast.LENGTH_SHORT).show();
-
-                }
-            }
-        }
-    };*/
-
-
-
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(this, MediaPlayerActivity.class);
+        intent.putExtra(TYPE_ID, typeId);
+        intent.putExtra(TITLE, title);
+        startActivity(intent);
+        // Otherwise defer to system default behavior.
+        super.onBackPressed();
+    }
 
     @Override
     public void onErrorResponse(VolleyError error) {
@@ -172,80 +147,16 @@ public class TrackListActivity extends AppCompatActivity implements  TrackListAd
 
     @Override
     protected void onResume() {
-       /* registerReceiver(receiver, new IntentFilter(
-                DownloadService.NOTIFICATION));*/
         super.onResume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-//        unregisterReceiver(receiver);
+
     }
 
 
-
-   /* public void downloadConent(String typeId){
-        Cursor cursor;
-        TuristListDbHelper turistListDbHelper = new TuristListDbHelper(this);
-        db = turistListDbHelper.getReadableDatabase();
-        TuristListDbQuery turistListDbQuery = new TuristListDbQuery(db);
-        cursor = turistListDbQuery.getAudioCursor(typeId);
-        progressBar.setMax(cursor.getCount()*3);
-        progressBar.setVisibility(View.VISIBLE);
-        if (cursor.moveToFirst()){
-            do{
-                String data = cursor.getString(cursor.getColumnIndex("AUDIO"));
-                String mUrl="http://android.x25.pl/NowaDroga/audio/"+ data;
-                Intent intent = new Intent(this, DownloadService.class);
-                // add infos for the service which file to download and where to store
-                intent.putExtra(DownloadService.FILENAME, data);
-                intent.putExtra(DownloadService.URL,
-                        mUrl);
-                intent.putExtra(DownloadService.DIRECTORY, "audio");
-                intent.putExtra(DownloadService.TYPE_ID, typeId);
-                intent.putExtra(DownloadService.COUNTER, progressStatus++);
-                startService(intent);
-            }while(cursor.moveToNext());
-        }
-        cursor = turistListDbQuery.getPictureCursor(typeId);
-        if (cursor.moveToFirst()){
-            do{
-                String data = cursor.getString(cursor.getColumnIndex("PICTURE"));
-                String mUrl="http://android.x25.pl/NowaDroga/foto/"+ data;
-                Intent intent = new Intent(this, DownloadService.class);
-                // add infos for the service which file to download and where to store
-                intent.putExtra(DownloadService.FILENAME, data);
-                intent.putExtra(DownloadService.URL,
-                        mUrl);
-                intent.putExtra(DownloadService.DIRECTORY, "picture");
-                intent.putExtra(DownloadService.TYPE_ID, typeId);
-                intent.putExtra(DownloadService.COUNTER, progressStatus++);
-                startService(intent);
-            }while(cursor.moveToNext());
-        }
-        cursor = turistListDbQuery.getVideoCursor(typeId);
-        if (cursor.moveToFirst()){
-            do{
-                String data = cursor.getString(cursor.getColumnIndex("VIDEO"));
-                if(data==null){
-                    data="null";
-                }
-                String mUrl="http://android.x25.pl/NowaDroga/video/"+ data;
-                Intent intent = new Intent(this, DownloadService.class);
-                // add infos for the service which file to download and where to store
-                intent.putExtra(DownloadService.FILENAME, data);
-                intent.putExtra(DownloadService.URL,
-                        mUrl);
-                intent.putExtra(DownloadService.DIRECTORY, "video");
-                intent.putExtra(DownloadService.COUNTER, progressStatus++);
-                intent.putExtra(DownloadService.TYPE_ID, typeId);
-                startService(intent);
-            }while(cursor.moveToNext());
-        }
-        cursor.close();
-
-    }*/
 
 
 }

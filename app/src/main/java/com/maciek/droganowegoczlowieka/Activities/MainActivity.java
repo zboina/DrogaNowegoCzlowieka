@@ -72,19 +72,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         loader = findViewById(R.id.loader);
 //        Toolbar myToolbar = findViewById(R.id.my_toolbar);
 //        setSupportActionBar(myToolbar);
-
-        if(tableIsEmpty(db)){
-            VolleyGetRequest volleyGetRequest = new VolleyGetRequest(this, db);
-            loader.setVisibility(View.VISIBLE);
-            volleyGetRequest.getNameAndPosition(1,loader, this);
-            volleyGetRequest.getNameAndPosition(2, loader, this);
-            volleyGetRequest.getNameAndPosition(3, loader, this);
-            volleyGetRequest.getNameAndPosition(4, loader, this);
-
-        }
-
     }
 
+
+    @Override
+    public void onBackPressed() {
+
+    }
 
     @Override
     public void onClick(View view) {
@@ -137,51 +131,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
 
-    /*private BroadcastReceiver receiver = new BroadcastReceiver() {
 
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Bundle bundle = intent.getExtras();
-            if (bundle != null) {
-                int resultCode = bundle.getInt(DownloadService.RESULT);
-                if (resultCode == RESULT_OK) {
-                    progressStatus=bundle.getInt(DownloadService.COUNTER);
-
-                    showProgressBar(cursor.getCount());
-                    if(bundle.getString(DownloadService.DIRECTORY).equals("audio")){
-                        InsertPositionToList.insertAudioUri(db, bundle.getString(DownloadService.FILEPATH), bundle.getString(DownloadService.FILENAME), bundle.getString(DownloadService.TYPE_ID) );
-                    }else if(bundle.getString(DownloadService.DIRECTORY).equals("picture")){
-                        InsertPositionToList.insertPictureUri(db, bundle.getString(DownloadService.FILEPATH), bundle.getString(DownloadService.FILENAME),  bundle.getString(DownloadService.TYPE_ID) );
-                    }else {
-                        InsertPositionToList.insertVideoUri(db, bundle.getString(DownloadService.FILEPATH), bundle.getString(DownloadService.FILENAME),  bundle.getString(DownloadService.TYPE_ID) );
-                    }
-                    if(progressStatus+1==cursor.getCount()){
-                        progressBar.setVisibility(View.INVISIBLE);
-                        Toast.makeText(MainActivity.this, "Download completed", Toast.LENGTH_SHORT).show();
-                    }else {
-                        progressBar.setVisibility(View.VISIBLE);
-                    }
-
-                } else {
-                    Toast.makeText(getApplicationContext(), "Download failed",
-                            Toast.LENGTH_SHORT).show();
-
-                }
-            }
-        }
-    };*/
 
 
     @Override
     protected void onResume() {
+        if(tableIsEmpty(db)){
+            VolleyGetRequest volleyGetRequest = new VolleyGetRequest(this, db);
+            loader.setVisibility(View.VISIBLE);
+            volleyGetRequest.getNameAndPosition(1,loader, this);
+            volleyGetRequest.getNameAndPosition(2, loader, this);
+            volleyGetRequest.getNameAndPosition(3, loader, this);
+            volleyGetRequest.getNameAndPosition(4, loader, this);
+        }
         super.onResume();
-//        registerReceiver(receiver, new IntentFilter(
-//                DownloadService.NOTIFICATION));
+
     }
     @Override
     protected void onPause() {
         super.onPause();
-//        unregisterReceiver(receiver);
     }
 
     public static void verifyStoragePermissions(Activity activity) {
@@ -198,33 +166,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    public void showProgressBar(final int cursorSize){
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (progressStatus<cursorSize){
-
-                    SystemClock.sleep(10);
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            progressBar.setProgress(2*progressStatus+2);
-                        }
-                    });
-                }
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(progressStatus==cursorSize){
-                            progressBar.setVisibility(View.INVISIBLE);
-                        }
-
-
-                    }
-                });
-            }
-        }).start();
-    }
 
     private static boolean tableIsEmpty(SQLiteDatabase db){
         String count = "SELECT count(*) FROM "+TouristListContract.TouristListEntry.TABLE_NAME;
