@@ -1,12 +1,14 @@
 package com.maciek.droganowegoczlowieka.Activities;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.MediaController;
 import android.widget.VideoView;
 
@@ -78,5 +80,16 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                 startActivity(new Intent(this, MainActivity.class));
                 mFloatingButton.setVisibility(View.GONE);
         }
+    }
+
+    @Override
+    protected void onResume() {
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        }
+        else {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        }
+        super.onResume();
     }
 }
