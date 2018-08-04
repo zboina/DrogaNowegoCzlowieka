@@ -17,7 +17,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_gravity="center">
+        android:layout_gravity="center"
+        android:padding="25dp">
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -74,7 +75,7 @@
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp"
                 android:background="@drawable/button"
-                android:text="Pobieraj"
+                android:text="Pobierz"
                 android:layout_weight="1"
                 android:visibility="visible"/>
             <Button
@@ -82,7 +83,7 @@
                 android:id="@+id/go_to_main_activity"
                 android:layout_height="wrap_content"
                 android:background="@drawable/button"
-                android:text="przejdź do aplikacji :)"
+                android:text="przejdź do aplikacji"
                 android:layout_weight="1"
                 android:visibility="gone"
                 />
