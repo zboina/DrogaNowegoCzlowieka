@@ -52,7 +52,7 @@ public class SlidingImageAdapter extends PagerAdapter {
 
         String stringUrl = IMAGES.get(position);
         if(IMAGES.get(position).contains("null")){
-            stringUrl="/storage/emulated/0/Pictures/turysta-dialog-malzenski.jpg";
+            stringUrl="/data/user/0/com.maciek.droganowegoczlowieka/files/turysta-dialog-malzenski.jpg";
         }
         URL url = null;
         Bitmap bitmap = null;
