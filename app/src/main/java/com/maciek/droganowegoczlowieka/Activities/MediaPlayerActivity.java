@@ -233,7 +233,8 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
     protected void onResume() {
         Intent intent = getIntent();
         if(intent.getIntExtra(POSITION, -1)!=-1){
-            index=intent.getIntExtra(POSITION,0)-1;
+            index=intent.getIntExtra(POSITION,0);
+            viewPager.setCurrentItem(index);
             try {
                 skipNext();
             } catch (IOException e) {
@@ -306,6 +307,7 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
                 break;
             case R.id.button_previous:
                 try {
+                    index++;
                     temp = index;
                     viewPager.postDelayed(new Runnable() {
 
