@@ -14,6 +14,7 @@ import android.widget.VideoView;
 
 import com.maciek.droganowegoczlowieka.R;
 
+import static com.maciek.droganowegoczlowieka.Activities.MediaPlayerActivity.POSITION;
 import static com.maciek.droganowegoczlowieka.Activities.TrackListActivity.TITLE;
 import static com.maciek.droganowegoczlowieka.Activities.TrackListActivity.TYPE_ID;
 
@@ -21,6 +22,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
 
     String typeId;
     String title;
+    int position;
     private FloatingActionButton mFloatingButton;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +30,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
         setContentView(R.layout.activity_video_player);
         Intent intent = getIntent();
         String uriToLunch = intent.getStringExtra("URI");
+        position = intent.getIntExtra(POSITION,-1);
         VideoView videoView = findViewById(R.id.video_view);
         if(uriToLunch==null){
             videoView.setVideoPath("android.resource://" + getPackageName() + "/" + R.raw.introdnc);
@@ -53,6 +56,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
                     Intent intent = new Intent(getApplicationContext(), MediaPlayerActivity.class);
                     intent.putExtra(TYPE_ID, typeId);
                     intent.putExtra(TITLE, title);
+                    intent.putExtra(POSITION, position);
                     startActivity(intent);
                 }
             }
@@ -68,6 +72,7 @@ public class VideoPlayerActivity extends AppCompatActivity implements View.OnCli
             Intent intent = new Intent(this, MediaPlayerActivity.class);
             intent.putExtra(TYPE_ID, typeId);
             intent.putExtra(TITLE, title);
+            intent.putExtra(POSITION, position);
             startActivity(intent);
         }
 

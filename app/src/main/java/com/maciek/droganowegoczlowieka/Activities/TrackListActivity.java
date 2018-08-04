@@ -37,6 +37,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 
+import static com.maciek.droganowegoczlowieka.Activities.MediaPlayerActivity.POSITION;
+
 
 public class TrackListActivity extends AppCompatActivity implements  TrackListAdapter.ListItemClickListener,  Response.Listener<byte[]>, Response.ErrorListener{
 //implements Response.Listener<byte[]>, Response.ErrorListener, TrackListAdapter.ListItemClickListener
@@ -56,7 +58,7 @@ public class TrackListActivity extends AppCompatActivity implements  TrackListAd
     private int cursorMax;
     String title;
     private ProgressBar progressBar;    int i=0;
-
+    int position;
 
 
     @Override
@@ -73,6 +75,7 @@ public class TrackListActivity extends AppCompatActivity implements  TrackListAd
         Intent intent = getIntent();
         typeId = intent.getStringExtra(TYPE_ID);
         title = intent.getStringExtra(TITLE);
+        position = intent.getIntExtra(POSITION, -1);
         Cursor cursor = turistListDbQuery.getQueriedTouristList(typeId);
         trackListAdapter = new TrackListAdapter(this,cursor,this);
         mRecyclerView.setAdapter(trackListAdapter);
@@ -96,6 +99,7 @@ public class TrackListActivity extends AppCompatActivity implements  TrackListAd
         Intent intent = new Intent(this, MediaPlayerActivity.class);
         intent.putExtra(TITLE, title);
         intent.putExtra(TYPE_ID, typeId);
+        intent.putExtra(POSITION, clickedItemIndex);
         startActivity(intent);
 
 //        TODO po kliknieciu na element odpala media playera i puszcza element z list sciaga URI pliki lokalnego
@@ -130,6 +134,7 @@ public class TrackListActivity extends AppCompatActivity implements  TrackListAd
         Intent intent = new Intent(this, MediaPlayerActivity.class);
         intent.putExtra(TYPE_ID, typeId);
         intent.putExtra(TITLE, title);
+        intent.putExtra(POSITION, position);
         startActivity(intent);
         // Otherwise defer to system default behavior.
         super.onBackPressed();

@@ -32,7 +32,6 @@
             android:screenOrientation="portrait" />
 
         <service android:name=".Utilities.DownloadService" />
-        <service android:name=".MediaPlayer.MediaPlayerService" />
 
         <activity
             android:name=".Activities.MediaPlayerActivity"

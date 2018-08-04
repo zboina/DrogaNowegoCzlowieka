@@ -154,4 +154,25 @@ public class TuristListDbQuery {
                 null);
     }
 
+
+
+    public Cursor getAudioUriImageUriVideoUriPosByTypeId(String typeId){
+        String[] ary = new String[]
+                        {TouristListContract.TouristListEntry.COLUMN_AUDIO_URI,
+                        TouristListContract.TouristListEntry.COLUMN_PICTURE_URI,
+                        TouristListContract.TouristListEntry.COLUMN_VIDEO_URI,
+                        TouristListContract.TouristListEntry.COLUMN_POSITION,
+                        TouristListContract.TouristListEntry.COLUMN_NAME};
+        String selection = TouristListContract.TouristListEntry.COLUMN_TYPE_ID + " = ?";
+        String[] selectionArgs = {typeId};
+        return mDb.query(TouristListContract.TouristListEntry.TABLE_NAME,
+                ary,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                TouristListContract.TouristListEntry.COLUMN_POSITION);
+    }
+
+
 }

@@ -10,9 +10,14 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.TransitionDrawable;
+import android.media.MediaPlayer;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -25,61 +30,95 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.maciek.droganowegoczlowieka.Adapter.SlidingImageAdapter;
 import com.maciek.droganowegoczlowieka.DB.TouristListContract;
 import com.maciek.droganowegoczlowieka.DB.TuristListDbHelper;
 import com.maciek.droganowegoczlowieka.DB.TuristListDbQuery;
-import com.maciek.droganowegoczlowieka.MediaPlayer.MediaPlayerService;
 import com.maciek.droganowegoczlowieka.MediaPlayer.StorageUtil;
 import com.maciek.droganowegoczlowieka.R;
 import com.maciek.droganowegoczlowieka.Utilities.OnSwipeTouchListener;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.maciek.droganowegoczlowieka.Activities.TrackListActivity.TITLE;
 import static com.maciek.droganowegoczlowieka.Activities.TrackListActivity.TYPE_ID;
-import static com.maciek.droganowegoczlowieka.MediaPlayer.MediaPlayerService.ACTION_PLAY;
 
-public class MediaPlayerActivity extends AppCompatActivity implements View.OnClickListener, View.OnTouchListener {
+public class MediaPlayerActivity extends AppCompatActivity implements View.OnClickListener, View.OnTouchListener, MediaPlayer.OnCompletionListener,
+        MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnSeekCompleteListener,
+        MediaPlayer.OnInfoListener, MediaPlayer.OnBufferingUpdateListener{
 
     private SQLiteDatabase db;
     private TuristListDbQuery turistListDbQuery;
     private TuristListDbHelper turistListDbHelper;
-    private SeekBar mSeekBar;
     private FloatingActionButton mFloatingActionButton;
     private TextView mTextView, trackTitleTextView;
     private Cursor cursor;
-    ArrayList<String> listOfTitles;
-    private int audioIndex = -1;
-    IntentFilter filterRefreshUpdate;
-    public static final String Broadcast_PLAY_NEW_AUDIO = "com.valdioveliu.valdio.audioplayer.PlayNewAudio";
+    ArrayList<String> listOfImagesSorted;
+    private static ViewPager viewPager;
+    public static String POSITION = "POSITION";
 
     private ImageButton previous, next, start;
     private Button showList, goToMainMenu;
     private ImageView imageView;
-    String position;
-    private MediaPlayerService player;
-    boolean serviceBound = false;
+    int index = -1;
     String title;
     private String typeId;
-    private Boolean isAudioGood=false;
+    private Map<Integer, String>  mapAudio, mapVideo, mapImage, mapTitle;
+
+    private MediaPlayer mMediaPlayer;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_media_player);
+
         Intent intent = getIntent();
         title = intent.getStringExtra(TITLE);
-        turistListDbHelper = new TuristListDbHelper(this);
+        typeId = intent.getStringExtra(TYPE_ID);
 
+        turistListDbHelper = new TuristListDbHelper(this);
         db = turistListDbHelper.getReadableDatabase();
         turistListDbQuery = new TuristListDbQuery(db);
-        cursor = turistListDbQuery.getPosition(title);
-        cursor.moveToFirst();
-        position = cursor.getString(cursor.getColumnIndex(TouristListContract.TouristListEntry.COLUMN_POSITION));
-        listOfTitles = new ArrayList<>();
-        cursor = turistListDbQuery.getAudioUriByTypeId(intent.getStringExtra(TYPE_ID));
-        typeId = intent.getStringExtra(TYPE_ID);
+        cursor = turistListDbQuery.getAudioUriImageUriVideoUriPosByTypeId(typeId);
+        int audioUriIndex = cursor.getColumnIndex(TouristListContract.TouristListEntry.COLUMN_AUDIO_URI);
+        int videoUriIndex = cursor.getColumnIndex(TouristListContract.TouristListEntry.COLUMN_VIDEO_URI);
+        int imgUriIndex = cursor.getColumnIndex(TouristListContract.TouristListEntry.COLUMN_PICTURE_URI);
+        int posIndex = cursor.getColumnIndex(TouristListContract.TouristListEntry.COLUMN_POSITION);
+        int audioNameIndex = cursor.getColumnIndex(TouristListContract.TouristListEntry.COLUMN_NAME);
+
+        mapAudio = new HashMap<>();
+        mapImage = new HashMap<>();
+        mapVideo = new HashMap<>();
+        mapTitle = new HashMap<>();
+        listOfImagesSorted = new ArrayList<>();
+
+        for(cursor.moveToFirst();!cursor.isAfterLast();cursor.moveToNext()){
+
+            if(cursor.getString(audioUriIndex)!=null||!cursor.getString(audioUriIndex).equals("null"))
+                mapAudio.put(cursor.getInt(posIndex), cursor.getString(audioUriIndex));
+            if(cursor.getString(videoUriIndex)!=null){
+                if(!cursor.getString(videoUriIndex).equals("null")){
+                    mapVideo.put(cursor.getInt(posIndex), cursor.getString(videoUriIndex));
+                }
+            }
+            if(cursor.getString(imgUriIndex)!=null||!cursor.getString(imgUriIndex).equals("null")){
+                mapImage.put(cursor.getInt(posIndex), cursor.getString(imgUriIndex));
+                listOfImagesSorted.add(cursor.getString(imgUriIndex));
+            }
+
+            if(cursor.getString(audioNameIndex)!=null||!cursor.getString(audioNameIndex).equals("null"))
+                mapTitle.put(cursor.getInt(posIndex), cursor.getString(audioNameIndex));
+
+        }
+
+
 
         //guziczki
         previous = findViewById(R.id.button_previous);
@@ -93,28 +132,55 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         previous.setOnClickListener(this);
         next.setOnClickListener(this);
         start.setOnClickListener(this);
+        mFloatingActionButton.setOnClickListener(this);
         imageView = findViewById(R.id.image_view_media_player);
         showList = findViewById(R.id.showList);
+        viewPager = findViewById(R.id.pager);
         showList.setOnClickListener(this);
-        imageView.setOnTouchListener(new OnSwipeTouchListener(this){
+        // koniec Guziczków
+
+        viewPager.setAdapter(new SlidingImageAdapter(MediaPlayerActivity.this,listOfImagesSorted));
+
+        initMediaPlayer();
+        try {
+            skipNext();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        mTextView.setText(index+". "+ mapTitle.get(index));
+
+
+        viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
-            public void onSwipeRight() {
-                super.onSwipeRight();
-                player.skipToPrevious();
-                ispressed = true;
-                start.setImageResource(R.drawable.ic_play_white);
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+//
             }
 
             @Override
-            public void onSwipeLeft() {
-                super.onSwipeLeft();
-                player.skipToNext();
-                ispressed = true;
-                start.setImageResource(R.drawable.ic_play_white);
+            public void onPageSelected(int position) {
+                start.setImageResource(R.drawable.ic_pause_circle);
+                ispressed=false;
+                if(position>index){
+                    try {
+                        skipNext();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }else {
+                    try {
+                        skipPrevious();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
             }
 
+            @Override
+            public void onPageScrollStateChanged(int state) {
 
-
+            }
         });
 
         switch (typeId){
@@ -133,332 +199,286 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         }
 
 
-//        mSeekBar = findViewById(R.id.seek_bar);
-
-
-        for(cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()){
-            listOfTitles.add(cursor.getString(cursor.getColumnIndex(TouristListContract.TouristListEntry.COLUMN_AUDIO_URI)));
-        }
-        int pos = Integer.parseInt(position);
-        changeImageView(listOfTitles.get(pos));
-//        playAudio(listOfTitles.get(pos));
-
-//play the first audio in the ArrayList
-        playAudio(pos);
-        isAudioGood=true;
-        filterRefreshUpdate = new IntentFilter();
-        filterRefreshUpdate.addAction("andorid.mybroadcast");
-
-
-
-       /* mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                if(serviceBound==true){
-                    if(player.getMediaPlayer() != null && b){
-                        player.getMediaPlayer().seekTo(i);
-                    }
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });*/
-
-
-
-
-
-    }
-    Integer progress,duration;
-    private Handler mHandler = new Handler();
-
-
-    private ServiceConnection serviceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            // We've bound to LocalService, cast the IBinder and get LocalService instance
-            MediaPlayerService.LocalBinder binder = (MediaPlayerService.LocalBinder) service;
-            player = binder.getService();
-            serviceBound = true;
-
-            Toast.makeText(MediaPlayerActivity.this, "Service Bound", Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            serviceBound = false;
-        }
-    };
-
-   /* private void playAudio(String media) {
-        //Check is service is active
-        if (!serviceBound) {
-            Intent playerIntent = new Intent(this, MediaPlayerService.class);
-            playerIntent.putExtra("media", media);
-            startService(playerIntent);
-            bindService(playerIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-        } else {
-            //Service is active
-            //Send media with BroadcastReceiver
-        }
-    }*/
-
-
-
-
-
-
-    private void playAudio(int audioIndex) {
-        //Check is service is active
-        if (!serviceBound) {
-            //Store Serializable audioList to SharedPreferences
-            StorageUtil storage = new StorageUtil(getApplicationContext());
-            storage.storeAudio(listOfTitles);
-            storage.storeAudioIndex(audioIndex);
-
-            Intent playerIntent = new Intent(this, MediaPlayerService.class);
-            startService(playerIntent);
-            bindService(playerIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-        } else {
-            //Store the new audioIndex to SharedPreferences
-            StorageUtil storage = new StorageUtil(getApplicationContext());
-            storage.storeAudioIndex(audioIndex);
-
-            //Service is active
-            //Send a broadcast to the service -> PLAY_NEW_AUDIO
-            Intent broadcastIntent = new Intent(Broadcast_PLAY_NEW_AUDIO);
-            sendBroadcast(broadcastIntent);
-        }
     }
 
-    public void doBindService(){
-        Intent playerIntent = new Intent(this, MediaPlayerService.class);
-        startService(playerIntent);
-        bindService(playerIntent, serviceConnection, Context.BIND_AUTO_CREATE);
-        playerIntent = new Intent(ACTION_PLAY);
-        sendBroadcast(playerIntent);
+    private Bitmap getImageByIndex(int i){
+        if(index+i==mapImage.size()){
+            index=0;
+        }else if(index-1<0){
+            index=mapImage.size()-1;
+        }
+        String stringUrl = mapImage.get(index+i);
+        if(mapImage.get(index+i).contains("null")){
+            stringUrl="/storage/emulated/0/Pictures/turysta-dialog-malzenski.jpg";
+        }
+        URL url = null;
+        Bitmap bitmap= null;
+        try {
+            url = new URL("file://"+stringUrl);
+            bitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return bitmap;
+
     }
 
-    BroadcastReceiver receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-//            duration = intent.getIntExtra("DURATION", 0);
-//            progress = intent.getIntExtra("PROGRESS", 0);
-//            updateSeekBar(progress, duration);
-        }
-    };
+    private boolean initMediaPlayer(){
+        mMediaPlayer = new MediaPlayer();
+        mMediaPlayer.reset();
+        return true;
+    }
 
     @Override
     protected void onResume() {
+        Intent intent = getIntent();
+        if(intent.getIntExtra(POSITION, -1)!=-1){
+            index=intent.getIntExtra(POSITION,0)-1;
+            try {
+                skipNext();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if(!mMediaPlayer.isPlaying())
+            resumeMedia();
+
         super.onResume();
-        playMusic();
-        musicMethodsHandler.post(musicRun);
     }
 
     @Override
     protected void onPause() {
-        musicMethodsHandler.removeCallbacks(musicRun);
-        if(serviceBound) {
-            player.stopMedia();
-
-        }
+        pauseMedia();
         super.onPause();
-//        unregisterReceiver(receiver);
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        savedInstanceState.putBoolean("ServiceState", serviceBound);
-        super.onSaveInstanceState(savedInstanceState);
-    }
-
-    @Override
-    public void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-    }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (serviceBound) {
-            unbindService(serviceConnection);
-            //service is active
-            player.stopSelf();
-        }
-    }
-
-    String currentSong;
-    String tempSong;
-    Handler musicMethodsHandler = new Handler();
-    Runnable musicRun = new Runnable() {
-        @Override
-        public void run() {
-            if (serviceBound == true){
-                // Check if service bounded
-//                if (duration == null){ // Put data in it one time
-//                    duration = player.getDuration();
-//                    Log.v("Music dur: ", duration.toString());
-//                    mSeekBar.setMax(duration);
-//                }
-                playMusic();
-                currentSong=player.getActiveAudio();
-//                progress = player.getCurrentPos();
-//                Log.v("Music prog:", progress.toString());
-//                mSeekBar.setProgress(progress);
-                changeImageView(currentSong);
-                changeTextView(currentSong);
-                playVideo(currentSong);
-
-
-            }else if(serviceBound == false){ // if service is not bounded log it
-                Log.v("Still waiting to bound", Boolean.toString(serviceBound));
-            }
-            musicMethodsHandler.postDelayed(this, 100);
-//            duration=null;
-
-
-        }
-
-    };
-    private void changeTextView(String currentSong){
-        cursor = turistListDbQuery.getAudioTitle(currentSong);
-        cursor.moveToFirst();
-        String stringTitle = cursor.getString(0);
-        cursor = turistListDbQuery.getPostionByAudioUri(currentSong);
-        cursor.moveToFirst();
-        String position = cursor.getString(0);
-        if(stringTitle!=null){
-            mTextView.setText(position+". "+stringTitle);
-        }
-
-
-    }
-    private void changeImageView(String currentSong){
-        cursor = turistListDbQuery.getPictureUriByAudioUri(currentSong);
-        cursor.moveToFirst();
-        String stringUrl = cursor.getString(0);
-
-        if(stringUrl.contains("null")){
-            stringUrl="/storage/emulated/0/Pictures/turysta-dialog-malzenski.jpg";
-        }
-        try{
-            URL url = new URL("file://"+stringUrl);
-            Bitmap bitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream());
-            imageView.setImageBitmap(bitmap);
-        }catch (Exception e){
-
+        if (mMediaPlayer != null) {
+            stopMedia();
+            mMediaPlayer.release();
         }
 
     }
-    String title2;
-    String stringVideoUrl;
-    private void playVideo(String currentSong){
-        cursor = turistListDbQuery.getVideoUriByAudioUri(currentSong);
-        cursor.moveToFirst();
-        stringVideoUrl =cursor.getString(0);
-        if(stringVideoUrl!=null){
-            try {
-                mFloatingActionButton.setVisibility(View.VISIBLE);
-                mFloatingActionButton.setClickable(true);
-                cursor = turistListDbQuery.getAudioByAudioUri(currentSong);
-                cursor.moveToFirst();
-                title2 =cursor.getString(0);
-                mFloatingActionButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        Intent intent = new Intent(getApplicationContext(), VideoPlayerActivity.class);
-                        intent.putExtra("URI", stringVideoUrl);
-                        int pos = Integer.parseInt(position);
-
-                        intent.putExtra(TITLE, title2);
-                        intent.putExtra(TYPE_ID, typeId);
-                        startActivity(intent);
-                    }
-                });
-            }catch (Exception e){
-
-            }
-        }else {
-            mFloatingActionButton.setClickable(false);
-            mFloatingActionButton.setVisibility(View.GONE);
-        }
-    }
-    int currentPosition;
-    boolean ispressed = true;
-    @Override
-    public void onClick(View view) {
-        switch (view.getId()){
-            case R.id.next_button:
-                if(serviceBound==true){
-                    player.skipToNext();
-                    ispressed = true;
-                    start.setImageResource(R.drawable.ic_play_white);
-                }
-                break;
-            case R.id.start_stop_button:
-                if(serviceBound==true){
-
-                    if(ispressed){
-                        ispressed= false;
-                        start.setImageResource(R.drawable.ic_pause_circle);
-                        player.resumeMedia();
-                    }else {
-                        ispressed=true;
-                        start.setImageResource(R.drawable.ic_play_white);
-                        player.pauseMedia();
-
-                    }
-                }
-                break;
-            case R.id.button_previous:
-                if(serviceBound==true){
-                    player.skipToPrevious();
-                    ispressed = true;
-                    start.setImageResource(R.drawable.ic_play_white);
-                }
-                break;
-            case R.id.showList:
-                Intent intent = new Intent(this, TrackListActivity.class);
-                intent.putExtra(TYPE_ID, typeId);
-                String audioUri = player.getActiveAudio();
-                cursor = turistListDbQuery.getAudioByAudioUri(audioUri);
-                cursor.moveToFirst();
-                title2 =cursor.getString(0);
-                intent.putExtra(TITLE, title2);
-                startActivity(intent);
-                break;
-            case R.id.GoToMainMenuButton:
-                startActivity(new Intent(this, MainActivity.class));
-                break;
-
-        }
-    }
-    @Override
-    public void onBackPressed() {
-        startActivity(new Intent(this, MainActivity.class));
-        super.onBackPressed();
-    }
-
-    private void playMusic(){
-        int pos = Integer.parseInt(position);
-        changeImageView(listOfTitles.get(pos));
-        playAudio(pos);
-    }
-
 
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
        return false;
     }
+    int temp;
+    boolean ispressed = false;
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()){
+            case R.id.next_button:
+                try {
+                    index++;
+                    viewPager.setCurrentItem(index);
+                    skipNext();
 
 
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                ispressed = false;
+                    start.setImageResource(R.drawable.ic_pause_circle);
+                
+                break;
+            case R.id.start_stop_button:
+              
 
+                    if(ispressed){
+                        ispressed= false;
+                        playMedia();
+                        start.setImageResource(R.drawable.ic_pause_circle);
+
+                    }else {
+                        ispressed=true;
+                        pauseMedia();
+                        start.setImageResource(R.drawable.ic_play_white);
+
+
+                    
+                }
+                break;
+            case R.id.button_previous:
+                try {
+                    temp = index;
+                    viewPager.postDelayed(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            viewPager.setCurrentItem(temp-2);
+
+                        }
+                    }, 50);
+
+                    skipPrevious();
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                ispressed = false;
+                start.setImageResource(R.drawable.ic_pause_circle);
+                break;
+            case R.id.showList:
+                Intent intentTrackList = new Intent(this, TrackListActivity.class);
+                intentTrackList.putExtra(TYPE_ID, typeId);
+                intentTrackList.putExtra(TITLE, mapTitle.get(index));
+                intentTrackList.putExtra(POSITION, index);
+                startActivity(intentTrackList);
+                break;
+            case R.id.GoToMainMenuButton:
+                startActivity(new Intent(this, MainActivity.class));
+                break;
+
+            case R.id.launch_media_player:
+                Intent intent = new Intent(this, VideoPlayerActivity.class);
+                intent.putExtra(TYPE_ID, typeId);
+                intent.putExtra(TITLE, mapTitle.get(index));
+                intent.putExtra("URI", mapVideo.get(index));
+                intent.putExtra(POSITION, index);
+                startActivity(intent);
+
+        }
+    }
+
+    @Override
+    public void onBufferingUpdate(MediaPlayer mMediaPlayer, int i) {
+
+    }
+
+    @Override
+    public void onCompletion(MediaPlayer mMediaPlayer) {
+
+    }
+
+    private void skipNext() throws IOException {
+        if(index==mapAudio.size()-1){
+            index=mapAudio.size()-1;
+        }else {
+            index++;
+        }
+        stopMedia();
+        mMediaPlayer.reset();
+        mMediaPlayer.setDataSource("file://"+mapAudio.get(index));
+        mMediaPlayer.prepare();
+        mMediaPlayer.start();
+//        String stringUrl = mapImage.get(index);
+//        if(mapImage.get(index).contains("null")){
+//            stringUrl="/storage/emulated/0/Pictures/turysta-dialog-malzenski.jpg";
+//        }
+//        URL url = new URL("file://"+stringUrl);
+//
+//        Bitmap bitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+//        imageView.setImageBitmap(bitmap);
+
+        mTextView.setText(index+". "+mapTitle.get(index));
+
+        if(mapVideo.containsKey(index)){
+            mFloatingActionButton.setVisibility(View.VISIBLE);
+        }else {
+            mFloatingActionButton.setVisibility(View.GONE);
+        }
+
+    }
+
+    private void skipPrevious() throws IOException {
+        if(index==0){
+            index = 0;
+        }else {
+            index--;
+        }
+        stopMedia();
+        mMediaPlayer.reset();
+        mMediaPlayer.setDataSource("file://"+mapAudio.get(index));
+        mMediaPlayer.prepare();
+        mMediaPlayer.start();
+//        String stringUrl = mapImage.get(index);
+//        if(mapImage.get(index).contains("null")){
+//            stringUrl="/storage/emulated/0/Pictures/turysta-dialog-malzenski.jpg";
+//        }
+//        URL url = new URL("file://"+stringUrl);
+//
+//        Bitmap bitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+//        imageView.setImageBitmap(bitmap);
+
+        mTextView.setText(index+". "+mapTitle.get(index));
+
+        if(mapVideo.containsKey(index)){
+            mFloatingActionButton.setVisibility(View.VISIBLE);
+        }else {
+            mFloatingActionButton.setVisibility(View.GONE);
+        }
+    }
+
+
+    @Override
+    public boolean onError(MediaPlayer mMediaPlayer, int i, int i1) {
+        switch (i) {
+            case MediaPlayer.MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK:
+                Log.d("MediaPlayer Error", "MEDIA ERROR NOT VALID FOR PROGRESSIVE PLAYBACK " + i1);
+                break;
+            case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
+                Log.d("MediaPlayer Error", "MEDIA ERROR SERVER DIED " + i1);
+                break;
+            case MediaPlayer.MEDIA_ERROR_UNKNOWN:
+                Log.d("MediaPlayer Error", "MEDIA ERROR UNKNOWN " + i1);
+                break;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean onInfo(MediaPlayer mMediaPlayer, int i, int i1) {
+        return false;
+    }
+
+    @Override
+    public void onPrepared(MediaPlayer mMediaPlayer) {
+        mMediaPlayer.start();
+    }
+
+    @Override
+    public void onSeekComplete(MediaPlayer mMediaPlayer) {
+
+    }
+
+
+    private void playMedia() {
+        if (!mMediaPlayer.isPlaying()) {
+            mMediaPlayer.start();
+        }
+    }
+
+    public void stopMedia() {
+        if (mMediaPlayer == null) return;
+        if (mMediaPlayer.isPlaying()) {
+            mMediaPlayer.stop();
+        }
+    }
+    int resumePosition;
+    public void pauseMedia() {
+        if (mMediaPlayer.isPlaying()) {
+            mMediaPlayer.pause();
+            resumePosition = mMediaPlayer.getCurrentPosition();
+        }
+    }
+
+    public void resumeMedia() {
+        if (!mMediaPlayer.isPlaying()) {
+            mMediaPlayer.seekTo(resumePosition);
+            mMediaPlayer.start();
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        startActivity(new Intent(this, MainActivity.class));
+        stopMedia();
+    }
 }

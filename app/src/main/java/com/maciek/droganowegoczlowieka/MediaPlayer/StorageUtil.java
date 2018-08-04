@@ -9,6 +9,8 @@ import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Geezy on 25.07.2018.
@@ -23,26 +25,26 @@ public class StorageUtil {
         this.context = context;
     }
 
-    public void storeAudio(ArrayList<String> arrayList) {
+    public void storeHashMap(HashMap<Integer, String> hashMap) {
         preferences = context.getSharedPreferences(STORAGE, Context.MODE_PRIVATE);
 
         SharedPreferences.Editor editor = preferences.edit();
         Gson gson = new Gson();
-        String json = gson.toJson(arrayList);
-        editor.putString("audioArrayList", json);
+        String json = gson.toJson(hashMap);
+        editor.putString("hashMap", json);
         editor.apply();
     }
 
-    public ArrayList<String> loadAudio() {
+    public HashMap<Integer, String> loadHashMap() {
         preferences = context.getSharedPreferences(STORAGE, Context.MODE_PRIVATE);
         Gson gson = new Gson();
-        String json = preferences.getString("audioArrayList", null);
-        Type type = new TypeToken<ArrayList<String>>() {
+        String json = preferences.getString("hashMap", null);
+        Type type = new TypeToken<HashMap<Integer, String>>() {
         }.getType();
         return gson.fromJson(json, type);
     }
 
-    public void storeAudioIndex(int index) {
+    public void storeHashMapIndex(int index) {
         preferences = context.getSharedPreferences(STORAGE, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();
         editor.putInt("audioIndex", index);

@@ -1,3 +1,4 @@
+/*
 package com.maciek.droganowegoczlowieka.MediaPlayer;
 
 import android.app.NotificationManager;
@@ -29,9 +30,11 @@ import com.maciek.droganowegoczlowieka.R;
 import java.io.IOException;
 import java.util.ArrayList;
 
+*/
 /**
  * Created by Geezy on 25.07.2018.
- */
+ *//*
+
 
 public class MediaPlayerService extends Service implements MediaPlayer.OnCompletionListener,
         MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnSeekCompleteListener,
@@ -209,13 +212,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             mediaPlayer.stop();
         }
     }
-    public int getCurrentPosition(){
-        return mediaPlayer.getCurrentPosition();
-    }
-    public MediaPlayer getMediaPlayer(){
-        return mediaPlayer;
-    }
-
     public void pauseMedia() {
         if (mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
@@ -405,3 +401,4 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public static final String ACTION_NEXT = "com.valdioveliu.valdio.audioplayer.ACTION_NEXT";
     public static final String ACTION_STOP = "com.valdioveliu.valdio.audioplayer.ACTION_STOP";
 }
+*/
