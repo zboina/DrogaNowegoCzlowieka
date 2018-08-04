@@ -5,11 +5,11 @@
     <string name="advanced_button">Zaawansowani</string>
     <string name="home_church_button">Domowy Kościół</string>
     <string name="debug_db_button">DB_Debugger</string>
-    <string name="download_content_button">Pobierz audio/wideło</string>
+    <string name="download_content_button">Pobierz audio/video</string>
     <string name="title_activity_downloader">DownloaderActivity</string>
     <string name="download_text">
-        Witaj podróżniku, zanim przejdziesz dalej i bedziesz w pełni cieszył się podróżą, pobierz zawartość pozostałych tras,
-        potrwa chwile a ten no. Kliknij pobierz. Zajmie jakies 100Mb na twoim telefonie. Potrwa w zaleznosci od predkosci internetu okolo 1 minute
+        Witaj! \n\nZanim będziesz mógł korzystać z aplikacju pobierz materiały multimedialne do wszystkich ścieżek.
+        Potrwa to w zależnosci od predkości Twojego internetu od kilku do kilkunastu minut. Zajmą one na Twoim telefonie około 120 Mb.  \nKliknij przycisk POBIERZ.
     </string>
     <!--TODO dodać wartości dla wszytkich referencji-->
 </resources>
