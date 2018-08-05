@@ -75,7 +75,6 @@ public class DownloaderActivity extends AppCompatActivity implements   Response.
     @Override
     protected void onPause() {
         super.onPause();
-        unregisterReceiver(receiver);
     }
 
 
@@ -107,6 +106,7 @@ public class DownloaderActivity extends AppCompatActivity implements   Response.
                         else {
                             textView.setText("Gitara sciągnałeś wszystko i się aplikacja nie wysypała, idź słuchaj");
                             goToMainButton.setVisibility(View.VISIBLE);
+                            unregisterReceiver(receiver);
 
                         }
                     }
