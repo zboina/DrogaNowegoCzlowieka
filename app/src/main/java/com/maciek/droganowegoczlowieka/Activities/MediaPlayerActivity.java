@@ -71,6 +71,8 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
     private Map<Integer, String>  mapAudio, mapVideo, mapImage, mapTitle;
 
     private MediaPlayer mMediaPlayer;
+    public static String TRACK_PROGRESS = "TRACK_PROGRESS";
+    int trackProgress;
 
 
 
@@ -82,6 +84,7 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         Intent intent = getIntent();
         title = intent.getStringExtra(TITLE);
         typeId = intent.getStringExtra(TYPE_ID);
+        trackProgress = intent.getIntExtra(TRACK_PROGRESS, -1);
 
         turistListDbHelper = new TuristListDbHelper(this);
         db = turistListDbHelper.getReadableDatabase();
@@ -201,28 +204,6 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
 
     }
 
-    private Bitmap getImageByIndex(int i){
-        if(index+i==mapImage.size()){
-            index=0;
-        }else if(index-1<0){
-            index=mapImage.size()-1;
-        }
-        String stringUrl = mapImage.get(index+i);
-        if(mapImage.get(index+i).contains("null")){
-            stringUrl="/storage/emulated/0/Pictures/turysta-dialog-malzenski.jpg";
-        }
-        URL url = null;
-        Bitmap bitmap= null;
-        try {
-            url = new URL("file://"+stringUrl);
-            bitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return bitmap;
-
-    }
-
     private boolean initMediaPlayer(){
         mMediaPlayer = new MediaPlayer();
         mMediaPlayer.reset();
@@ -232,6 +213,8 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
     @Override
     protected void onResume() {
         Intent intent = getIntent();
+        trackProgress=intent.getIntExtra(TRACK_PROGRESS, -1);
+        intent.getIntExtra(TRACK_PROGRESS, -1);
         if(intent.getIntExtra(POSITION, -1)!=-1){
             index=intent.getIntExtra(POSITION,0);
             viewPager.setCurrentItem(index);
@@ -240,12 +223,19 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }else if(trackProgress!=-1){
+            int position = intent.getIntExtra(TRACK_PROGRESS,0);
+            mMediaPlayer.seekTo(position);
         }
-
-        if(!mMediaPlayer.isPlaying())
-            resumeMedia();
-
+        resumeMedia();
         super.onResume();
+
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
     }
 
     @Override
@@ -344,6 +334,7 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
                 intent.putExtra(TITLE, mapTitle.get(index));
                 intent.putExtra("URI", mapVideo.get(index));
                 intent.putExtra(POSITION, index);
+                intent.putExtra(TRACK_PROGRESS, mMediaPlayer.getCurrentPosition());
                 startActivity(intent);
 
         }

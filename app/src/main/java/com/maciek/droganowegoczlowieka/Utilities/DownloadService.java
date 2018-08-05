@@ -54,16 +54,13 @@ public class DownloadService extends IntentService {
 
 
         if(directory.equals("audio")){
-            output = new File(Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_MUSIC),
+            output = new File(getFilesDir(),
                     fileName);
         }else if(directory.equals("picture")){
-            output = new File(Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_PICTURES),
+            output = new File(getFilesDir(),
                     fileName);
         }else {
-            output = new File(Environment.getExternalStoragePublicDirectory(
-                    Environment.DIRECTORY_MOVIES),
+            output = new File(getFilesDir(),
                     fileName);
         }
 
