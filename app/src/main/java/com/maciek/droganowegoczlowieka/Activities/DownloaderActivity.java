@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -39,6 +40,7 @@ public class DownloaderActivity extends AppCompatActivity implements   Response.
     private TextView textViewCounter;
     private TuristListDbHelper turistListDbHelper;
     private TuristListDbQuery turistListDbQuery;
+    private SharedPreferences.Editor editor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +61,10 @@ public class DownloaderActivity extends AppCompatActivity implements   Response.
         acceptButton.setOnClickListener(this);
         rejectButton.setOnClickListener(this);
         goToMainButton.setOnClickListener(this);
+        SharedPreferences sharedPref = this.getSharedPreferences(
+                getString(R.string.was_download_succesfull), Context.MODE_PRIVATE);
+        editor = sharedPref.edit();
+
 
 
 
@@ -107,7 +113,8 @@ public class DownloaderActivity extends AppCompatActivity implements   Response.
                             textView.setText("Gitara sciągnałeś wszystko i się aplikacja nie wysypała, idź słuchaj");
                             goToMainButton.setVisibility(View.VISIBLE);
                             unregisterReceiver(receiver);
-
+                            editor.putInt(getString(R.string.was_download_succesfull), 4);
+                            editor.commit();
                         }
                     }
 
