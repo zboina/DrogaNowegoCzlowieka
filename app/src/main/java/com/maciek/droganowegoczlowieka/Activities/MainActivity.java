@@ -140,7 +140,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onResume() {
         SharedPreferences sharedPreferences = this.getSharedPreferences(getString(R.string.was_download_succesfull),Context.MODE_PRIVATE);
         int isSuccesful=sharedPreferences.getInt(getString(R.string.was_download_succesfull), 0);
-        if(isSuccesful!=4){
+        if(isSuccesful==4){
+            touristButton.setVisibility(View.VISIBLE);
+            homeChurchButton.setVisibility(View.VISIBLE);
+            debuggerButton.setVisibility(View.VISIBLE);
+            oazaYouthButton.setVisibility(View.VISIBLE);
+            advancedButton.setVisibility(View.VISIBLE);
+        }
+        if(isSuccesful!=4 || tableIsEmpty(db)){
             reCreatedb();
             VolleyGetRequest volleyGetRequest = new VolleyGetRequest(this, db);
             loader.setVisibility(View.VISIBLE);
