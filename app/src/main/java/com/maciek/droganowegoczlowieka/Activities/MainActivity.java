@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -33,6 +34,7 @@ import com.maciek.droganowegoczlowieka.Utilities.AndroidDatabaseManager;
 import com.maciek.droganowegoczlowieka.Utilities.DownloadService;
 import com.maciek.droganowegoczlowieka.Utilities.VolleyGetRequest;
 
+import static com.maciek.droganowegoczlowieka.Activities.MediaPlayerActivity.TRACK_PROGRESS;
 import static com.maciek.droganowegoczlowieka.Activities.TrackListActivity.TITLE;
 import static com.maciek.droganowegoczlowieka.Activities.TrackListActivity.TYPE_ID;
 
@@ -70,8 +72,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         touristButton.setOnClickListener(this);
         homeChurchButton.setOnClickListener(this);
         loader = findViewById(R.id.loader);
-//        Toolbar myToolbar = findViewById(R.id.my_toolbar);
-//        setSupportActionBar(myToolbar);
+        SharedPreferences sharedPreferences = this.getSharedPreferences(
+                getString(R.string.was_download_succesfull), this.MODE_PRIVATE);
+
     }
 
 
@@ -83,11 +86,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View view) {
         Intent mIntent = new Intent(this, MediaPlayerActivity.class);
+        mIntent.putExtra(TRACK_PROGRESS,0);
 
         switch (view.getId()) {
             case R.id.button_tourist:
-//                mIntent.putExtra("type_id", "1");
-//                startActivity(mIntent);
                 mIntent.putExtra(TITLE, "turysta-wstep.mp3");
                 mIntent.putExtra(TYPE_ID, "1");
                 startActivity(mIntent);
@@ -136,7 +138,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onResume() {
-        if(tableIsEmpty(db)){
+        SharedPreferences sharedPreferences = this.getSharedPreferences(getString(R.string.was_download_succesfull),Context.MODE_PRIVATE);
+        int isSuccesful=sharedPreferences.getInt(getString(R.string.was_download_succesfull), 0);
+        if(isSuccesful==4){
+            touristButton.setVisibility(View.VISIBLE);
+            homeChurchButton.setVisibility(View.VISIBLE);
+            debuggerButton.setVisibility(View.VISIBLE);
+            oazaYouthButton.setVisibility(View.VISIBLE);
+            advancedButton.setVisibility(View.VISIBLE);
+        }
+        if(isSuccesful!=4 || tableIsEmpty(db)){
+            reCreatedb();
             VolleyGetRequest volleyGetRequest = new VolleyGetRequest(this, db);
             loader.setVisibility(View.VISIBLE);
             volleyGetRequest.getNameAndPosition(1,loader, this);
@@ -179,5 +191,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
     }
+
+    private  void reCreatedb(){
+        db.execSQL("DROP TABLE IF EXISTS " + TouristListContract.TouristListEntry.TABLE_NAME);
+        db.execSQL("CREATE TABLE " + TouristListContract.TouristListEntry.TABLE_NAME + " (" +
+                TouristListContract.TouristListEntry._ID + " INTEGER PRIMARY KEY," +
+                TouristListContract.TouristListEntry.COLUMN_POSITION + " NUMBER,"+
+                TouristListContract.TouristListEntry.COLUMN_AUDIO + " TEXT," +
+                TouristListContract.TouristListEntry.COLUMN_NAME + " TEXT," +
+                TouristListContract.TouristListEntry.COLUMN_AUDIO_URI + " TEXT," +
+                TouristListContract.TouristListEntry.COLUMN_PICTURE + " TEXT," +
+                TouristListContract.TouristListEntry.COLUMN_PICTURE_URI + " TEXT," +
+                TouristListContract.TouristListEntry.COLUMN_VIDEO + " TEXT," +
+                TouristListContract.TouristListEntry.COLUMN_VIDEO_URI + " TEXT," +
+                TouristListContract.TouristListEntry.COLUMN_IS_ACTIVE + " BOOLEAN," +
+                TouristListContract.TouristListEntry.COLUMN_TYPE_ID + " NUMBER);");
+        finish();
+    }
+
 
 }

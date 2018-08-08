@@ -143,6 +143,7 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         // koniec Guziczków
 
         viewPager.setAdapter(new SlidingImageAdapter(MediaPlayerActivity.this,listOfImagesSorted));
+        start.setBackgroundColor(getResources().getColor(R.color.ziolny_ciemny_michala));
 
         initMediaPlayer();
         try {
@@ -152,18 +153,19 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         }
 
         mTextView.setText(index+". "+ mapTitle.get(index));
+        mMediaPlayer.setOnCompletionListener(this);
 
 
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-//
             }
 
             @Override
             public void onPageSelected(int position) {
                 start.setImageResource(R.drawable.ic_pause_circle);
                 ispressed=false;
+                start.setBackgroundColor(getResources().getColor(R.color.ziolny_ciemny_michala));
                 if(position>index){
                     try {
                         skipNext();
@@ -213,11 +215,10 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
     @Override
     protected void onResume() {
         Intent intent = getIntent();
-        trackProgress=intent.getIntExtra(TRACK_PROGRESS, -1);
-        intent.getIntExtra(TRACK_PROGRESS, -1);
         if(intent.getIntExtra(POSITION, -1)!=-1){
             index=intent.getIntExtra(POSITION,0);
-            viewPager.setCurrentItem(index);
+            int temp = index;
+            viewPager.setCurrentItem(temp--);
             try {
                 skipNext();
             } catch (IOException e) {
@@ -226,8 +227,9 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         }else if(trackProgress!=-1){
             int position = intent.getIntExtra(TRACK_PROGRESS,0);
             mMediaPlayer.seekTo(position);
+            mMediaPlayer.start();
         }
-        resumeMedia();
+
         super.onResume();
 
     }
@@ -275,7 +277,8 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
                     e.printStackTrace();
                 }
                 ispressed = false;
-                    start.setImageResource(R.drawable.ic_pause_circle);
+                start.setImageResource(R.drawable.ic_pause_circle);
+                start.setBackgroundColor(getResources().getColor(R.color.ziolny_ciemny_michala));
                 
                 break;
             case R.id.start_stop_button:
@@ -285,11 +288,13 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
                         ispressed= false;
                         playMedia();
                         start.setImageResource(R.drawable.ic_pause_circle);
+                        start.setBackgroundColor(getResources().getColor(R.color.ziolny_ciemny_michala));
 
                     }else {
                         ispressed=true;
                         pauseMedia();
                         start.setImageResource(R.drawable.ic_play_white);
+                        start.setBackgroundColor(getResources().getColor(R.color.zielony_michala));
 
 
                     
@@ -316,6 +321,7 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
 
                 ispressed = false;
                 start.setImageResource(R.drawable.ic_pause_circle);
+                start.setBackgroundColor(getResources().getColor(R.color.ziolny_ciemny_michala));
                 break;
             case R.id.showList:
                 Intent intentTrackList = new Intent(this, TrackListActivity.class);
@@ -347,6 +353,10 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
 
     @Override
     public void onCompletion(MediaPlayer mMediaPlayer) {
+        mMediaPlayer.seekTo(0);
+        ispressed=true;
+        start.setImageResource(R.drawable.ic_play_white);
+        start.setBackgroundColor(getResources().getColor(R.color.zielony_michala));
 
     }
 
@@ -361,15 +371,6 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         mMediaPlayer.setDataSource("file://"+mapAudio.get(index));
         mMediaPlayer.prepare();
         mMediaPlayer.start();
-//        String stringUrl = mapImage.get(index);
-//        if(mapImage.get(index).contains("null")){
-//            stringUrl="/storage/emulated/0/Pictures/turysta-dialog-malzenski.jpg";
-//        }
-//        URL url = new URL("file://"+stringUrl);
-//
-//        Bitmap bitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream());
-//        imageView.setImageBitmap(bitmap);
-
         mTextView.setText(index+". "+mapTitle.get(index));
 
         if(mapVideo.containsKey(index)){
@@ -391,15 +392,6 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         mMediaPlayer.setDataSource("file://"+mapAudio.get(index));
         mMediaPlayer.prepare();
         mMediaPlayer.start();
-//        String stringUrl = mapImage.get(index);
-//        if(mapImage.get(index).contains("null")){
-//            stringUrl="/storage/emulated/0/Pictures/turysta-dialog-malzenski.jpg";
-//        }
-//        URL url = new URL("file://"+stringUrl);
-//
-//        Bitmap bitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream());
-//        imageView.setImageBitmap(bitmap);
-
         mTextView.setText(index+". "+mapTitle.get(index));
 
         if(mapVideo.containsKey(index)){
