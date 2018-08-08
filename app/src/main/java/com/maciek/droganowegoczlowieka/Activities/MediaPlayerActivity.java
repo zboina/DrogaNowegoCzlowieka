@@ -159,7 +159,6 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-//
             }
 
             @Override
@@ -372,15 +371,6 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         mMediaPlayer.setDataSource("file://"+mapAudio.get(index));
         mMediaPlayer.prepare();
         mMediaPlayer.start();
-//        String stringUrl = mapImage.get(index);
-//        if(mapImage.get(index).contains("null")){
-//            stringUrl="/storage/emulated/0/Pictures/turysta-dialog-malzenski.jpg";
-//        }
-//        URL url = new URL("file://"+stringUrl);
-//
-//        Bitmap bitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream());
-//        imageView.setImageBitmap(bitmap);
-
         mTextView.setText(index+". "+mapTitle.get(index));
 
         if(mapVideo.containsKey(index)){
@@ -402,15 +392,6 @@ public class MediaPlayerActivity extends AppCompatActivity implements View.OnCli
         mMediaPlayer.setDataSource("file://"+mapAudio.get(index));
         mMediaPlayer.prepare();
         mMediaPlayer.start();
-//        String stringUrl = mapImage.get(index);
-//        if(mapImage.get(index).contains("null")){
-//            stringUrl="/storage/emulated/0/Pictures/turysta-dialog-malzenski.jpg";
-//        }
-//        URL url = new URL("file://"+stringUrl);
-//
-//        Bitmap bitmap = BitmapFactory.decodeStream(url.openConnection().getInputStream());
-//        imageView.setImageBitmap(bitmap);
-
         mTextView.setText(index+". "+mapTitle.get(index));
 
         if(mapVideo.containsKey(index)){
